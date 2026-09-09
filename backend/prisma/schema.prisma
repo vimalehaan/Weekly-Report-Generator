@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  TEAM_MEMBER
+  MANAGER
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  NEEDS_CORRECTION
+  APPROVED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum ReviewAction {
+  REQUEST_CORRECTION
+  APPROVE
+  COMMENT
+}
+
+model Role {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      RoleName @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  isActive     Boolean  @default(true)
+  roleId       String   @db.Uuid
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  role                  Role                  @relation(fields: [roleId], references: [id])
+  reports               Report[]
+  createdReportVersions ReportVersion[]       @relation("ReportVersionCreator")
+  reportReviews         ReportReview[]        @relation("ReportReviewer")
+  reportStatusChanges   ReportStatusHistory[] @relation("ReportStatusChanger")
+
+  @@index([roleId])
+}
+
+model Project {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reportTasks ReportTask[]
+}
+
+model TaskType {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reportTasks ReportTask[]
+}
+
+model Report {
+  id            String       @id @default(uuid()) @db.Uuid
+  userId        String       @db.Uuid
+  weekStartDate DateTime     @db.Date
+  weekEndDate   DateTime     @db.Date
+  status        ReportStatus @default(DRAFT)
+  nextWeekTasks Json         @default("[]")
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user          User                  @relation(fields: [userId], references: [id])
+  reportTasks   ReportTask[]
+  versions      ReportVersion[]
+  statusHistory ReportStatusHistory[]
+  achievements  Achievement[]
+  blockers      Blocker[]
+
+  @@unique([userId, weekStartDate])
+  @@index([userId])
+  @@index([status])
+  @@index([weekStartDate])
+}
+
+model ReportTask {
+  id                String       @id @default(uuid()) @db.Uuid
+  reportId          String       @db.Uuid
+  projectId         String       @db.Uuid
+  taskTypeId        String?      @db.Uuid
+  taskName          String
+  priority          TaskPriority
+  plannedPercentage Int
+  actualPercentage  Int
+  status            TaskStatus
+  plannedHours      Decimal      @db.Decimal(6, 2)
+  spentHours        Decimal      @db.Decimal(6, 2)
+  deliverable       String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  report   Report    @relation(fields: [reportId], references: [id])
+  project  Project   @relation(fields: [projectId], references: [id])
+  taskType TaskType? @relation(fields: [taskTypeId], references: [id])
+
+  @@index([reportId])
+  @@index([projectId])
+  @@index([taskTypeId])
+}
+
+model ReportVersion {
+  id            String   @id @default(uuid()) @db.Uuid
+  reportId      String   @db.Uuid
+  versionNumber Int
+  content       Json
+  createdBy     String   @db.Uuid
+  createdAt     DateTime @default(now())
+
+  report  Report         @relation(fields: [reportId], references: [id])
+  creator User           @relation("ReportVersionCreator", fields: [createdBy], references: [id])
+  reviews ReportReview[]
+
+  @@unique([reportId, versionNumber])
+  @@index([reportId])
+  @@index([createdBy])
+}
+
+model ReportReview {
+  id              String       @id @default(uuid()) @db.Uuid
+  reportVersionId String       @db.Uuid
+  reviewerId      String       @db.Uuid
+  action          ReviewAction
+  comment         String?
+  createdAt       DateTime     @default(now())
+
+  reportVersion ReportVersion @relation(fields: [reportVersionId], references: [id])
+  reviewer      User          @relation("ReportReviewer", fields: [reviewerId], references: [id])
+
+  @@index([reportVersionId])
+  @@index([reviewerId])
+}
+
+model ReportStatusHistory {
+  id         String        @id @default(uuid()) @db.Uuid
+  reportId   String        @db.Uuid
+  changedBy  String        @db.Uuid
+  fromStatus ReportStatus?
+  toStatus   ReportStatus
+  comment    String?
+  createdAt  DateTime      @default(now())
+
+  report  Report @relation(fields: [reportId], references: [id])
+  changer User   @relation("ReportStatusChanger", fields: [changedBy], references: [id])
+
+  @@index([reportId])
+  @@index([changedBy])
+}
+
+model Achievement {
+  id               String   @id @default(uuid()) @db.Uuid
+  reportId         String   @db.Uuid
+  description      String
+  isKeyAchievement Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id])
+
+  @@index([reportId])
+}
+
+model Blocker {
+  id          String   @id @default(uuid()) @db.Uuid
+  reportId    String   @db.Uuid
+  description String
+  isKeyIssue  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id])
+
+  @@index([reportId])
+}
