@@ -22,24 +22,6 @@ function getAuthenticatedUser(
   return req.user;
 }
 
-function parseIsActiveFilter(value: unknown): boolean | undefined {
-  if (value === "true") {
-    return true;
-  }
-
-  if (value === "false") {
-    return false;
-  }
-
-  return undefined;
-}
-
-function parseTaskTypeFilters(query: Request["query"]): GetTaskTypesFilters {
-  const isActive = parseIsActiveFilter(query.isActive);
-
-  return isActive !== undefined ? { isActive } : {};
-}
-
 export async function createTaskType(
   req: Request,
   res: Response,
@@ -71,7 +53,7 @@ export async function getTaskTypes(
 
     const taskTypes = await taskTypeService.getTaskTypes(
       authUser,
-      parseTaskTypeFilters(req.query),
+      req.query as GetTaskTypesFilters,
     );
     res.status(200).json({ data: taskTypes });
   } catch (error) {
