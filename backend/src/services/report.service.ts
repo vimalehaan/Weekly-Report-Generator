@@ -255,6 +255,57 @@ function formatReportDetail(report: ReportWithSubmissionDetails) {
   };
 }
 
+type ReportVersionWithCreator = Prisma.ReportVersionGetPayload<{
+  include: {
+    creator: {
+      select: typeof safeUserSelect;
+    };
+  };
+}>;
+
+function formatReportVersion(version: ReportVersionWithCreator) {
+  return {
+    id: version.id,
+    reportId: version.reportId,
+    versionNumber: version.versionNumber,
+    content: version.content,
+    createdBy: version.createdBy,
+    createdAt: version.createdAt,
+    creator: toSafeUser(version.creator),
+  };
+}
+
+async function assertCanAccessReportForVersions(
+  reportId: string,
+  authUser: JwtPayload,
+  notFoundCode: "REPORT_NOT_FOUND" | "REPORT_VERSION_NOT_FOUND",
+): Promise<void> {
+  const report = await prisma.report.findUnique({
+    where: { id: reportId },
+    select: { id: true, userId: true },
+  });
+
+  if (
+    !report ||
+    (authUser.role === RoleName.TEAM_MEMBER &&
+      report.userId !== authUser.userId)
+  ) {
+    throw new AppError(
+      404,
+      notFoundCode,
+      notFoundCode === "REPORT_NOT_FOUND"
+        ? "Report not found"
+        : "Report version not found",
+    );
+  }
+}
+
+const reportVersionInclude = {
+  creator: {
+    select: safeUserSelect,
+  },
+} as const;
+
 export async function createReport(
   authUser: JwtPayload,
   input: CreateReportInput,
@@ -571,4 +622,55 @@ export async function submitReport(reportId: string, authUser: JwtPayload) {
   });
 
   return formatReportDetail(report);
+}
+
+export async function getReportVersions(
+  authUser: JwtPayload,
+  reportId: string,
+) {
+  await assertCanAccessReportForVersions(
+    reportId,
+    authUser,
+    "REPORT_NOT_FOUND",
+  );
+
+  const versions = await prisma.reportVersion.findMany({
+    where: { reportId },
+    orderBy: { versionNumber: "desc" },
+    include: reportVersionInclude,
+  });
+
+  return versions.map(formatReportVersion);
+}
+
+export async function getReportVersionById(
+  authUser: JwtPayload,
+  reportId: string,
+  versionNumber: number,
+) {
+  await assertCanAccessReportForVersions(
+    reportId,
+    authUser,
+    "REPORT_VERSION_NOT_FOUND",
+  );
+
+  const version = await prisma.reportVersion.findUnique({
+    where: {
+      reportId_versionNumber: {
+        reportId,
+        versionNumber,
+      },
+    },
+    include: reportVersionInclude,
+  });
+
+  if (!version) {
+    throw new AppError(
+      404,
+      "REPORT_VERSION_NOT_FOUND",
+      "Report version not found",
+    );
+  }
+
+  return formatReportVersion(version);
 }
