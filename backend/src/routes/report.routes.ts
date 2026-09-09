@@ -24,6 +24,18 @@ reportRouter.post(
   reportController.submit,
 );
 
+reportRouter.get(
+  "/:id/versions/:versionNumber",
+  requireAuth,
+  reportController.getVersionById,
+);
+
+reportRouter.get(
+  "/:id/versions",
+  requireAuth,
+  reportController.getVersions,
+);
+
 reportRouter.get("/:id", requireAuth, reportController.getById);
 
 reportRouter.patch(
