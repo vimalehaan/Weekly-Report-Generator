@@ -136,6 +136,45 @@ function toSafeUser(user: SafeUserWithRole): SafeUser {
   };
 }
 
+async function validateReportTaskReferences(
+  tasks: ReportTaskInput[],
+): Promise<void> {
+  if (tasks.length === 0) {
+    return;
+  }
+
+  const projectIds = [...new Set(tasks.map((task) => task.projectId))];
+  const taskTypeIds = [
+    ...new Set(
+      tasks
+        .map((task) => task.taskTypeId)
+        .filter((taskTypeId): taskTypeId is string => taskTypeId != null),
+    ),
+  ];
+
+  const existingProjects = await prisma.project.findMany({
+    where: { id: { in: projectIds } },
+    select: { id: true },
+  });
+
+  if (existingProjects.length !== projectIds.length) {
+    throw new AppError(404, "PROJECT_NOT_FOUND", "Project not found");
+  }
+
+  if (taskTypeIds.length === 0) {
+    return;
+  }
+
+  const existingTaskTypes = await prisma.taskType.findMany({
+    where: { id: { in: taskTypeIds } },
+    select: { id: true },
+  });
+
+  if (existingTaskTypes.length !== taskTypeIds.length) {
+    throw new AppError(404, "TASK_TYPE_NOT_FOUND", "Task type not found");
+  }
+}
+
 function mapTaskCreateData(reportId: string, tasks: ReportTaskInput[]) {
   return tasks.map((task) => ({
     reportId,
@@ -364,6 +403,8 @@ export async function createReport(
     );
   }
 
+  await validateReportTaskReferences(input.tasks);
+
   try {
     const report = await prisma.$transaction(async (tx) => {
       const createdReport = await tx.report.create({
@@ -542,6 +583,10 @@ export async function updateReport(
         "A report already exists for this week",
       );
     }
+  }
+
+  if (input.tasks !== undefined) {
+    await validateReportTaskReferences(input.tasks);
   }
 
   try {
