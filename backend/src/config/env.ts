@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const nodeEnv = process.env.NODE_ENV ?? "development";
 const port = Number(process.env.PORT ?? 3000);
 
 if (Number.isNaN(port)) {
@@ -9,6 +10,7 @@ if (Number.isNaN(port)) {
 }
 
 export const env = {
-  nodeEnv: process.env.NODE_ENV ?? "development",
+  nodeEnv,
   port,
+  isProduction: nodeEnv === "production",
 } as const;
