@@ -1,4 +1,4 @@
-import { TaskPriority, TaskStatus } from "@prisma/client";
+import { ReportStatus, TaskPriority, TaskStatus } from "@prisma/client";
 import { z } from "zod";
 
 const dateStringSchema = z
@@ -83,8 +83,35 @@ export const updateReportSchema = reportFieldsSchema
     weekDateRefinementOptions,
   );
 
+const queryPositiveIntegerSchema = z
+  .string()
+  .transform((value) => Number(value))
+  .pipe(z.number().int("Must be a positive integer").min(1));
+
+const queryLimitSchema = z
+  .string()
+  .transform((value) => Number(value))
+  .pipe(
+    z
+      .number()
+      .int("Must be a positive integer")
+      .min(1, "Must be at least 1")
+      .max(100, "Must be at most 100"),
+  );
+
+export const reportListQuerySchema = z
+  .object({
+    page: queryPositiveIntegerSchema.optional(),
+    limit: queryLimitSchema.optional(),
+    status: z.nativeEnum(ReportStatus).optional(),
+    weekStartDate: dateStringSchema.optional(),
+    userId: uuidSchema.optional(),
+  })
+  .strict();
+
 export type ReportTaskInput = z.infer<typeof reportTaskInputSchema>;
 export type AchievementInput = z.infer<typeof achievementInputSchema>;
 export type BlockerInput = z.infer<typeof blockerInputSchema>;
 export type CreateReportInput = z.infer<typeof createReportSchema>;
 export type UpdateReportInput = z.infer<typeof updateReportSchema>;
+export type ReportListQueryInput = z.infer<typeof reportListQuerySchema>;

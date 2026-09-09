@@ -1,9 +1,13 @@
 import { Router } from "express";
 import * as reportController from "../controllers/report.controller.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
-import { validateBody } from "../middleware/validate.middleware.js";
+import {
+  validateBody,
+  validateQuery,
+} from "../middleware/validate.middleware.js";
 import {
   createReportSchema,
+  reportListQuerySchema,
   updateReportSchema,
 } from "../validators/report.validator.js";
 
@@ -16,7 +20,12 @@ reportRouter.post(
   reportController.create,
 );
 
-reportRouter.get("/", requireAuth, reportController.getAll);
+reportRouter.get(
+  "/",
+  requireAuth,
+  validateQuery(reportListQuerySchema),
+  reportController.getAll,
+);
 
 reportRouter.post(
   "/:id/submit",

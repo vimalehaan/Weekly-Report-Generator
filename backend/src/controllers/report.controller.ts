@@ -1,15 +1,7 @@
-import { ReportStatus } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 import * as reportService from "../services/report.service.js";
 import { AppError } from "../utils/app-error.js";
-
-type ReportListFilters = {
-  page?: number;
-  limit?: number;
-  status?: ReportStatus;
-  userId?: string;
-  weekStartDate?: string;
-};
+import type { ReportListQueryInput } from "../validators/report.validator.js";
 
 function parsePositiveInteger(value: unknown): number | undefined {
   if (typeof value !== "string" || value.length === 0) {
@@ -23,30 +15,6 @@ function parsePositiveInteger(value: unknown): number | undefined {
   }
 
   return parsed;
-}
-
-function parseReportStatus(value: unknown): ReportStatus | undefined {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  return Object.values(ReportStatus).includes(value as ReportStatus)
-    ? (value as ReportStatus)
-    : undefined;
-}
-
-function parseString(value: unknown): string | undefined {
-  return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function parseReportListFilters(query: Request["query"]): ReportListFilters {
-  return {
-    page: parsePositiveInteger(query.page),
-    limit: parsePositiveInteger(query.limit),
-    status: parseReportStatus(query.status),
-    userId: parseString(query.userId),
-    weekStartDate: parseString(query.weekStartDate),
-  };
 }
 
 export async function create(
@@ -70,7 +38,7 @@ export async function getAll(
   try {
     const { reports, pagination } = await reportService.getReports(
       req.user!,
-      parseReportListFilters(req.query),
+      req.query as ReportListQueryInput,
     );
 
     res.status(200).json({
