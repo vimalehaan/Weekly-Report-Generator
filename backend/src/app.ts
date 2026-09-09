@@ -4,6 +4,7 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./middleware/error.middleware.js";
+import { authRouter } from "./routes/auth.routes.js";
 
 export function createApp() {
   const app = express();
@@ -18,6 +19,8 @@ export function createApp() {
       },
     });
   });
+
+  app.use("/api/v1/auth", authRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

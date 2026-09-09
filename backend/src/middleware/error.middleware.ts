@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
+import { AppError } from "../utils/app-error.js";
 
 type ErrorResponse = {
   error: {
@@ -27,6 +28,18 @@ export function errorHandler(
 ): void {
   if (res.headersSent) {
     next(err);
+    return;
+  }
+
+  if (err instanceof AppError) {
+    const response: ErrorResponse = {
+      error: {
+        code: err.code,
+        message: err.message,
+      },
+    };
+
+    res.status(err.statusCode).json(response);
     return;
   }
 
