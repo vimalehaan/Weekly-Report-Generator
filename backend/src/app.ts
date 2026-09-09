@@ -8,6 +8,7 @@ import { authRouter } from "./routes/auth.routes.js";
 import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { reportRouter } from "./routes/report.routes.js";
 import { reviewRouter } from "./routes/review.routes.js";
+import { projectRouter } from "./routes/project.routes.js";
 
 export function createApp() {
   const app = express();
@@ -27,6 +28,7 @@ export function createApp() {
   app.use("/api/v1/dashboard", dashboardRouter);
   app.use("/api/v1/reports", reportRouter);
   app.use("/api/v1/reports", reviewRouter);
+  app.use("/api/v1/projects", projectRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
