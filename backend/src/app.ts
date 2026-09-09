@@ -9,6 +9,7 @@ import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { reportRouter } from "./routes/report.routes.js";
 import { reviewRouter } from "./routes/review.routes.js";
 import { projectRouter } from "./routes/project.routes.js";
+import { taskTypeRouter } from "./routes/task-type.routes.js";
 import { userRouter } from "./routes/user.routes.js";
 
 export function createApp() {
@@ -30,6 +31,7 @@ export function createApp() {
   app.use("/api/v1/reports", reportRouter);
   app.use("/api/v1/reports", reviewRouter);
   app.use("/api/v1/projects", projectRouter);
+  app.use("/api/v1/task-types", taskTypeRouter);
   app.use("/api/v1/users", userRouter);
 
   app.use(notFoundHandler);
