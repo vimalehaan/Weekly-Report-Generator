@@ -87,6 +87,40 @@ function parseDateString(date: string): Date {
   return new Date(`${date}T00:00:00.000Z`);
 }
 
+function formatDateString(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function assertValidWeekDateRange(
+  weekStartDate: string,
+  weekEndDate: string,
+): void {
+  if (weekEndDate < weekStartDate) {
+    throw new AppError(
+      422,
+      "VALIDATION_ERROR",
+      "weekEndDate must not be before weekStartDate",
+    );
+  }
+}
+
+function validateUpdateWeekDateRange(
+  input: UpdateReportInput,
+  existingWeekStartDate: Date,
+  existingWeekEndDate: Date,
+): void {
+  if (input.weekStartDate === undefined && input.weekEndDate === undefined) {
+    return;
+  }
+
+  const effectiveWeekStartDate =
+    input.weekStartDate ?? formatDateString(existingWeekStartDate);
+  const effectiveWeekEndDate =
+    input.weekEndDate ?? formatDateString(existingWeekEndDate);
+
+  assertValidWeekDateRange(effectiveWeekStartDate, effectiveWeekEndDate);
+}
+
 function toDecimal(value: number): Prisma.Decimal {
   return new Prisma.Decimal(value.toFixed(2));
 }
@@ -473,6 +507,8 @@ export async function updateReport(
       id: true,
       userId: true,
       status: true,
+      weekStartDate: true,
+      weekEndDate: true,
     },
   });
 
@@ -481,6 +517,11 @@ export async function updateReport(
   }
 
   assertCanModifyReport(existingReport, authUser);
+  validateUpdateWeekDateRange(
+    input,
+    existingReport.weekStartDate,
+    existingReport.weekEndDate,
+  );
 
   if (input.weekStartDate !== undefined) {
     const weekStartDate = parseDateString(input.weekStartDate);
