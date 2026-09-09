@@ -1,4 +1,3 @@
-import { RoleName } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 import type { JwtPayload } from "../types/auth.js";
 import type { GetUsersFilters } from "../services/user.service.js";
@@ -23,42 +22,6 @@ function getAuthenticatedUser(
   return req.user;
 }
 
-function parseIsActiveFilter(value: unknown): boolean | undefined {
-  if (value === "true") {
-    return true;
-  }
-
-  if (value === "false") {
-    return false;
-  }
-
-  return undefined;
-}
-
-function parseRoleFilter(value: unknown): RoleName | undefined {
-  if (value === RoleName.TEAM_MEMBER || value === RoleName.MANAGER) {
-    return value;
-  }
-
-  return undefined;
-}
-
-function parseUserFilters(query: Request["query"]): GetUsersFilters {
-  const filters: GetUsersFilters = {};
-  const role = parseRoleFilter(query.role);
-  const isActive = parseIsActiveFilter(query.isActive);
-
-  if (role !== undefined) {
-    filters.role = role;
-  }
-
-  if (isActive !== undefined) {
-    filters.isActive = isActive;
-  }
-
-  return filters;
-}
-
 export async function getUsers(
   req: Request,
   res: Response,
@@ -70,7 +33,10 @@ export async function getUsers(
       return;
     }
 
-    const users = await userService.getUsers(authUser, parseUserFilters(req.query));
+    const users = await userService.getUsers(
+      authUser,
+      req.query as GetUsersFilters,
+    );
     res.status(200).json({ data: users });
   } catch (error) {
     next(error);
