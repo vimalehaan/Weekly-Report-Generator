@@ -1,10 +1,8 @@
+import { RouterProvider } from "react-router-dom";
+import { appRouter } from "@/routes/router";
+
 function App() {
-  return (
-    <main>
-      <h1>Weekly Report Generator & Team Dashboard</h1>
-      <p>Frontend application initialized.</p>
-    </main>
-  );
+  return <RouterProvider router={appRouter} />;
 }
 
 export default App;
