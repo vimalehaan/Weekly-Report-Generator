@@ -30,15 +30,14 @@ export function LoginPage() {
     },
   });
 
-  const redirectPath =
-    (location.state as { from?: string } | null)?.from ?? ROUTES.home;
+  const fromPath = (location.state as { from?: string } | null)?.from;
 
   async function onSubmit(values: LoginFormValues) {
     setFormError(null);
 
     try {
       await login(values);
-      navigate(redirectPath, { replace: true });
+      navigate(fromPath ?? ROUTES.home, { replace: true });
     } catch (error) {
       setFormError(getAuthErrorMessage(error));
     }

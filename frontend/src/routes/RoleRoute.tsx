@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { AuthLoadingScreen } from "@/components/common/AuthLoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
-import { ROUTES } from "@/routes/paths";
+import { getDefaultDashboardPath, ROUTES } from "@/routes/paths";
 import type { RoleName } from "@/types/auth";
 
 type RoleRouteProps = {
@@ -20,7 +20,13 @@ export function RoleRoute({ allowedRoles }: RoleRouteProps) {
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to={ROUTES.home} replace state={{ forbidden: true }} />;
+    return (
+      <Navigate
+        to={getDefaultDashboardPath(user.role)}
+        replace
+        state={{ forbidden: true }}
+      />
+    );
   }
 
   return <Outlet />;
