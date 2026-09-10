@@ -1,9 +1,25 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { AuthLoadingScreen } from "@/components/common/AuthLoadingScreen";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROUTES } from "@/routes/paths";
 
-/**
- * Wrapper for authenticated routes.
- * Session and role checks will be added in a later milestone.
- */
 export function ProtectedRoute() {
+  const { isAuthenticated, isInitializing } = useAuth();
+  const location = useLocation();
+
+  if (isInitializing) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to={ROUTES.login}
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
+  }
+
   return <Outlet />;
 }

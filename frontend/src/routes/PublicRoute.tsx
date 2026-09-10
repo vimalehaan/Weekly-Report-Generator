@@ -1,9 +1,22 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { AuthLoadingScreen } from "@/components/common/AuthLoadingScreen";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROUTES } from "@/routes/paths";
 
-/**
- * Wrapper for routes accessible without authentication.
- * Auth redirects will be added in a later milestone.
- */
 export function PublicRoute() {
+  const { isAuthenticated, isInitializing } = useAuth();
+  const location = useLocation();
+
+  if (isInitializing) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (isAuthenticated) {
+    const redirectPath =
+      (location.state as { from?: string } | null)?.from ?? ROUTES.home;
+
+    return <Navigate to={redirectPath} replace />;
+  }
+
   return <Outlet />;
 }

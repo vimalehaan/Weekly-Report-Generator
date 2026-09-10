@@ -1,5 +1,6 @@
 import cookieParser from "cookie-parser";
 import express from "express";
+import { corsMiddleware } from "./middleware/cors.middleware.js";
 import {
   errorHandler,
   notFoundHandler,
@@ -15,6 +16,7 @@ import { userRouter } from "./routes/user.routes.js";
 export function createApp() {
   const app = express();
 
+  app.use(corsMiddleware);
   app.use(express.json());
   app.use(cookieParser());
 
