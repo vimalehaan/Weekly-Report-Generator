@@ -1,9 +1,1 @@
-export {
-  getDashboardData,
-  getDashboardRecentActivity,
-  getDashboardStatusByMember,
-  getDashboardSummary,
-  getDashboardTaskTrends,
-  getDashboardTimeByTaskType,
-  getDashboardWorkloadByProject,
-} from "./dashboard.service";
+export { getDashboardData } from "./dashboard.service";

@@ -30,27 +30,12 @@ export const ROUTES = {
   },
 } as const;
 
-export type AppRoutePath =
-  | typeof ROUTES.home
-  | typeof ROUTES.login
-  | typeof ROUTES.register
-  | (typeof ROUTES.member)[keyof typeof ROUTES.member]
-  | (typeof ROUTES.manager)[keyof typeof ROUTES.manager];
-
 export function getDefaultDashboardPath(role: RoleName): string {
   if (role === "MANAGER") {
     return ROUTES.manager.dashboard;
   }
 
   return ROUTES.member.dashboard;
-}
-
-export function isMemberPath(pathname: string): boolean {
-  return pathname.startsWith("/member");
-}
-
-export function isManagerPath(pathname: string): boolean {
-  return pathname.startsWith("/manager");
 }
 
 export function memberReportDetailPath(reportId: string): string {
