@@ -121,11 +121,9 @@ export async function createProject(
 }
 
 export async function getProjects(
-  authUser: JwtPayload,
+  _authUser: JwtPayload,
   filters: GetProjectsFilters = {},
 ) {
-  assertManager(authUser);
-
   const where: Prisma.ProjectWhereInput = {};
 
   if (filters.isActive !== undefined) {
@@ -141,9 +139,7 @@ export async function getProjects(
   });
 }
 
-export async function getProjectById(authUser: JwtPayload, projectId: string) {
-  assertManager(authUser);
-
+export async function getProjectById(_authUser: JwtPayload, projectId: string) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: projectSelect,

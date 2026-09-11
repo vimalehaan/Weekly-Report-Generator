@@ -124,19 +124,17 @@ export async function createTaskType(
 }
 
 export async function getTaskTypes(
-  authUser: JwtPayload,
+  _authUser: JwtPayload,
   filters: GetTaskTypesFilters = {},
 ) {
-  assertManager(authUser);
-
-  const where: Prisma.TaskTypeWhereInput = {};
+  const where: GetTaskTypesFilters = {};
 
   if (filters.isActive !== undefined) {
     where.isActive = filters.isActive;
   }
 
   return prisma.taskType.findMany({
-    where,
+    where: where as Prisma.TaskTypeWhereInput,
     select: taskTypeSelect,
     orderBy: {
       name: "asc",
@@ -144,9 +142,10 @@ export async function getTaskTypes(
   });
 }
 
-export async function getTaskTypeById(authUser: JwtPayload, taskTypeId: string) {
-  assertManager(authUser);
-
+export async function getTaskTypeById(
+  _authUser: JwtPayload,
+  taskTypeId: string,
+) {
   const taskType = await prisma.taskType.findUnique({
     where: { id: taskTypeId },
     select: taskTypeSelect,
@@ -175,7 +174,7 @@ export async function updateTaskType(
     throw new AppError(404, "TASK_TYPE_NOT_FOUND", "Task type not found");
   }
 
-  const data: Prisma.TaskTypeUpdateInput = {};
+  const data: UpdateTaskTypeInput = {};
 
   if (input.name !== undefined) {
     const name = validateName(input.name);
@@ -213,7 +212,7 @@ export async function updateTaskType(
   try {
     return await prisma.taskType.update({
       where: { id: taskTypeId },
-      data,
+      data: data as Prisma.TaskTypeUpdateInput,
       select: taskTypeSelect,
     });
   } catch (error) {
