@@ -6,7 +6,7 @@ import { LoginPage } from "@/pages/auth/LoginPage";
 import { RegisterPage } from "@/pages/auth/RegisterPage";
 import { RoleHomeRedirect } from "@/pages/common/RoleHomeRedirect";
 import { MemberDashboardPage } from "@/pages/member/MemberDashboardPage";
-import { MemberNewReportPage } from "@/pages/member/MemberNewReportPage";
+import { NewReportPage } from "@/pages/member/NewReportPage";
 import { MemberReportDetailPage } from "@/pages/member/MemberReportDetailPage";
 import { MemberReportHistoryPage } from "@/pages/member/MemberReportHistoryPage";
 import { MemberReportsPage } from "@/pages/member/MemberReportsPage";
@@ -63,7 +63,7 @@ export const appRouter = createBrowserRouter([
               },
               {
                 path: ROUTES.member.reportsNew,
-                element: <MemberNewReportPage />,
+                element: <NewReportPage />,
               },
               {
                 path: ROUTES.member.reportsHistory,
