@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import {
   isManagerReportDetailPath,
+  isManagerProjectPath,
   isManagerUserDetailPath,
   isMemberReportVersionsPath,
   ROUTES,
@@ -90,7 +91,7 @@ export const MANAGER_NAV_ITEMS: AppNavItemConfig[] = [
     label: "Projects",
     to: ROUTES.manager.projects,
     icon: FolderKanban,
-    end: true,
+    isActiveMatch: (pathname) => isManagerProjectPath(pathname),
   },
   {
     label: "Task Types",

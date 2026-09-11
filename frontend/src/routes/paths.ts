@@ -22,6 +22,8 @@ export const ROUTES = {
     users: "/manager/users",
     userDetail: "/manager/users/:userId",
     projects: "/manager/projects",
+    projectsNew: "/manager/projects/new",
+    projectDetail: "/manager/projects/:projectId",
     taskTypes: "/manager/task-types",
   },
 } as const;
@@ -82,4 +84,16 @@ export function managerUserDetailPath(userId: string): string {
 
 export function isManagerUserDetailPath(pathname: string): boolean {
   return /^\/manager\/users\/[^/]+$/.test(pathname);
+}
+
+export function managerProjectDetailPath(projectId: string): string {
+  return `/manager/projects/${projectId}`;
+}
+
+export function isManagerProjectPath(pathname: string): boolean {
+  return (
+    pathname === ROUTES.manager.projects ||
+    pathname === ROUTES.manager.projectsNew ||
+    /^\/manager\/projects\/[^/]+$/.test(pathname)
+  );
 }

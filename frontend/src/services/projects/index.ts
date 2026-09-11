@@ -1,1 +1,7 @@
-export { getProjectById, getProjects } from "@/services/projects/project.service";
+export {
+  createProject,
+  deactivateProject,
+  getProjectById,
+  getProjects,
+  updateProject,
+} from "./project.service";

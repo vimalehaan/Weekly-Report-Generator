@@ -18,3 +18,14 @@ export type ProjectResponse = {
 export type ProjectListResponse = {
   data: Project[];
 };
+
+export type CreateProjectInput = {
+  name: string;
+  description?: string;
+};
+
+export type UpdateProjectInput = {
+  name?: string;
+  description?: string | null;
+  isActive?: boolean;
+};
