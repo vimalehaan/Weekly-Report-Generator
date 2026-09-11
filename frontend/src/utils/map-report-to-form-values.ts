@@ -1,5 +1,6 @@
 import type { CreateReportFormValues } from "@/schemas/report/create-report.schema";
 import type { Report } from "@/types/report";
+import { formatNextWeekTaskLabel } from "@/utils/next-week-task-display";
 
 function toDateInputValue(isoDate: string): string {
   return isoDate.slice(0, 10);
@@ -16,7 +17,7 @@ function parseNextWeekTasks(value: Report["nextWeekTasks"]): { description: stri
   }
 
   return value.map((item) => ({
-    description: typeof item === "string" ? item : String(item),
+    description: formatNextWeekTaskLabel(item),
   }));
 }
 

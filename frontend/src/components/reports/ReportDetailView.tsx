@@ -1,4 +1,5 @@
 import type { Report } from "@/types/report";
+import { formatNextWeekTaskLabel } from "@/utils/next-week-task-display";
 type ReportDetailViewProps = {
   report: Report;
 };
@@ -128,9 +129,12 @@ export function ReportDetailView({ report }: ReportDetailViewProps) {
           </p>
         ) : (
           <ul className="list-disc space-y-1 pl-5 text-sm">
-            {report.nextWeekTasks.map((task, index) => (
-              <li key={`${index}-${task}`}>{task}</li>
-            ))}
+            {report.nextWeekTasks.map((task, index) => {
+              const label = formatNextWeekTaskLabel(task);
+              return (
+                <li key={`${index}-${label}`}>{label}</li>
+              );
+            })}
           </ul>
         )}
       </section>

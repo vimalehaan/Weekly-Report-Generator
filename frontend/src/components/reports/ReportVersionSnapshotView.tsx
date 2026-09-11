@@ -1,5 +1,6 @@
 import { ReportStatusBadge } from "@/components/reports/ReportStatusBadge";
 import type { ReportVersionContent } from "@/types/report";
+import { formatNextWeekTaskLabel } from "@/utils/next-week-task-display";
 import { formatReportWeekRange } from "@/utils/report-dates";
 
 type ReportVersionSnapshotViewProps = {
@@ -136,9 +137,12 @@ export function ReportVersionSnapshotView({
           <p className="text-sm text-muted-foreground">No next-week tasks.</p>
         ) : (
           <ul className="list-disc space-y-1 pl-5 text-sm">
-            {report.nextWeekTasks.map((task, index) => (
-              <li key={`${index}-${task}`}>{task}</li>
-            ))}
+            {report.nextWeekTasks.map((task, index) => {
+              const label = formatNextWeekTaskLabel(task);
+              return (
+                <li key={`${index}-${label}`}>{label}</li>
+              );
+            })}
           </ul>
         )}
       </section>
