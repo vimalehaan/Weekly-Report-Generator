@@ -25,6 +25,8 @@ export const ROUTES = {
     projectsNew: "/manager/projects/new",
     projectDetail: "/manager/projects/:projectId",
     taskTypes: "/manager/task-types",
+    taskTypesNew: "/manager/task-types/new",
+    taskTypeDetail: "/manager/task-types/:taskTypeId",
   },
 } as const;
 
@@ -95,5 +97,17 @@ export function isManagerProjectPath(pathname: string): boolean {
     pathname === ROUTES.manager.projects ||
     pathname === ROUTES.manager.projectsNew ||
     /^\/manager\/projects\/[^/]+$/.test(pathname)
+  );
+}
+
+export function managerTaskTypeDetailPath(taskTypeId: string): string {
+  return `/manager/task-types/${taskTypeId}`;
+}
+
+export function isManagerTaskTypePath(pathname: string): boolean {
+  return (
+    pathname === ROUTES.manager.taskTypes ||
+    pathname === ROUTES.manager.taskTypesNew ||
+    /^\/manager\/task-types\/[^/]+$/.test(pathname)
   );
 }

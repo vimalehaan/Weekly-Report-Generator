@@ -10,6 +10,7 @@ import {
 import {
   isManagerReportDetailPath,
   isManagerProjectPath,
+  isManagerTaskTypePath,
   isManagerUserDetailPath,
   isMemberReportVersionsPath,
   ROUTES,
@@ -97,6 +98,6 @@ export const MANAGER_NAV_ITEMS: AppNavItemConfig[] = [
     label: "Task Types",
     to: ROUTES.manager.taskTypes,
     icon: Tags,
-    end: true,
+    isActiveMatch: (pathname) => isManagerTaskTypePath(pathname),
   },
 ];

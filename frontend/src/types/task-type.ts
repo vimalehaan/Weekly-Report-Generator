@@ -18,3 +18,14 @@ export type TaskTypeResponse = {
 export type TaskTypeListResponse = {
   data: TaskType[];
 };
+
+export type CreateTaskTypeInput = {
+  name: string;
+  description?: string;
+};
+
+export type UpdateTaskTypeInput = {
+  name?: string;
+  description?: string | null;
+  isActive?: boolean;
+};

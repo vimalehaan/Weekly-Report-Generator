@@ -19,6 +19,8 @@ import { ManagerProjectsPage } from "@/pages/manager/ManagerProjectsPage";
 import { ManagerReportDetailPage } from "@/pages/manager/ManagerReportDetailPage";
 import { ManagerReportsPage } from "@/pages/manager/ManagerReportsPage";
 import { ManagerReviewPage } from "@/pages/manager/ManagerReviewPage";
+import { ManagerCreateTaskTypePage } from "@/pages/manager/ManagerCreateTaskTypePage";
+import { ManagerTaskTypeDetailPage } from "@/pages/manager/ManagerTaskTypeDetailPage";
 import { ManagerTaskTypesPage } from "@/pages/manager/ManagerTaskTypesPage";
 import { ManagerUserDetailPage } from "@/pages/manager/ManagerUserDetailPage";
 import { ManagerUsersPage } from "@/pages/manager/ManagerUsersPage";
@@ -136,6 +138,14 @@ export const appRouter = createBrowserRouter([
               {
                 path: ROUTES.manager.taskTypes,
                 element: <ManagerTaskTypesPage />,
+              },
+              {
+                path: ROUTES.manager.taskTypesNew,
+                element: <ManagerCreateTaskTypePage />,
+              },
+              {
+                path: ROUTES.manager.taskTypeDetail,
+                element: <ManagerTaskTypeDetailPage />,
               },
             ],
           },

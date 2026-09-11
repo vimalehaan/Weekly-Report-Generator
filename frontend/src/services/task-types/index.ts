@@ -1,4 +1,7 @@
 export {
+  createTaskType,
+  deactivateTaskType,
   getTaskTypeById,
   getTaskTypes,
-} from "@/services/task-types/task-type.service";
+  updateTaskType,
+} from "./task-type.service";
