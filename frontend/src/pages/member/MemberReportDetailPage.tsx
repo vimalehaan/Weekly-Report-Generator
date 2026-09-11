@@ -18,7 +18,7 @@ import {
   submitReport,
   updateReport,
 } from "@/services/reports";
-import { ROUTES } from "@/routes/paths";
+import { memberReportVersionsPath, ROUTES } from "@/routes/paths";
 import type { Report } from "@/types/report";
 import { isApiError } from "@/services/api";
 import { getApiErrorMessage } from "@/utils/api-errors";
@@ -268,6 +268,10 @@ export function MemberReportDetailPage() {
   const statusHint = getReportStatusHint(report.status);
   const editable = canEditReport(report.status);
   const submittable = canSubmitReport(report.status);
+  const hasVersionHistory =
+    report.status === "SUBMITTED" ||
+    report.status === "NEEDS_CORRECTION" ||
+    report.status === "APPROVED";
 
   return (
     <section className="space-y-6">
@@ -325,6 +329,17 @@ export function MemberReportDetailPage() {
       {statusHint ? (
         <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           {statusHint}
+        </p>
+      ) : null}
+
+      {mode === "view" && hasVersionHistory ? (
+        <p className="text-sm">
+          <Link
+            to={memberReportVersionsPath(report.id)}
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            View submitted version snapshots
+          </Link>
         </p>
       ) : null}
 

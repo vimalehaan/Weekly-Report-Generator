@@ -7,7 +7,7 @@ import {
   Tags,
   Users,
 } from "lucide-react";
-import { ROUTES } from "@/routes/paths";
+import { isMemberReportVersionsPath, ROUTES } from "@/routes/paths";
 import type { AppNavItemConfig } from "@/components/layout/AppNavItem";
 
 export const MEMBER_NAV_ITEMS: AppNavItemConfig[] = [
@@ -22,7 +22,10 @@ export const MEMBER_NAV_ITEMS: AppNavItemConfig[] = [
     to: ROUTES.member.reports,
     icon: ClipboardList,
     isActiveMatch: (pathname) => {
-      if (pathname === ROUTES.member.reportsHistory) {
+      if (
+        pathname === ROUTES.member.reportsHistory ||
+        isMemberReportVersionsPath(pathname)
+      ) {
         return false;
       }
 
@@ -43,7 +46,9 @@ export const MEMBER_NAV_ITEMS: AppNavItemConfig[] = [
     label: "Report History",
     to: ROUTES.member.reportsHistory,
     icon: History,
-    end: true,
+    isActiveMatch: (pathname) =>
+      pathname === ROUTES.member.reportsHistory ||
+      isMemberReportVersionsPath(pathname),
   },
 ];
 

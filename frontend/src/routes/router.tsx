@@ -9,6 +9,8 @@ import { MemberDashboardPage } from "@/pages/member/MemberDashboardPage";
 import { NewReportPage } from "@/pages/member/NewReportPage";
 import { MemberReportDetailPage } from "@/pages/member/MemberReportDetailPage";
 import { MemberReportHistoryPage } from "@/pages/member/MemberReportHistoryPage";
+import { MemberReportVersionDetailPage } from "@/pages/member/MemberReportVersionDetailPage";
+import { MemberReportVersionsPage } from "@/pages/member/MemberReportVersionsPage";
 import { MemberReportsPage } from "@/pages/member/MemberReportsPage";
 import { ManagerDashboardPage } from "@/pages/manager/ManagerDashboardPage";
 import { ManagerProjectsPage } from "@/pages/manager/ManagerProjectsPage";
@@ -68,6 +70,14 @@ export const appRouter = createBrowserRouter([
               {
                 path: ROUTES.member.reportsHistory,
                 element: <MemberReportHistoryPage />,
+              },
+              {
+                path: ROUTES.member.reportVersionDetail,
+                element: <MemberReportVersionDetailPage />,
+              },
+              {
+                path: ROUTES.member.reportVersions,
+                element: <MemberReportVersionsPage />,
               },
               {
                 path: ROUTES.member.reportDetail,
