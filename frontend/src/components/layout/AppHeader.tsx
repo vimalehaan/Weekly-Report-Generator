@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/constants/app";
@@ -21,6 +21,7 @@ export function AppHeader({
   onOpenMobileNav,
 }: AppHeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -30,6 +31,7 @@ export function AppHeader({
 
     try {
       await logout();
+      navigate(ROUTES.login, { replace: true });
     } catch (error) {
       setLogoutError(getAuthErrorMessage(error));
     } finally {

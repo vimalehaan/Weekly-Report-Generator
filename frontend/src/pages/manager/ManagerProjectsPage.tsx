@@ -1,11 +1,11 @@
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ProjectListFilters } from "@/components/projects/ProjectListFilters";
 import {
-  ProjectListFilters,
-  projectListFiltersToApi,
-  type ProjectListFilterValues,
-} from "@/components/projects/ProjectListFilters";
+  activeStatusFilterToApi,
+  type ActiveStatusFilterValues,
+} from "@/utils/active-status-filter";
 import { ProjectList } from "@/components/projects/ProjectList";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getProjects } from "@/services/projects";
@@ -16,13 +16,13 @@ import { cn } from "@/lib/utils";
 
 type LoadState = "loading" | "success" | "error";
 
-const EMPTY_FILTERS: ProjectListFilterValues = {
+const EMPTY_FILTERS: ActiveStatusFilterValues = {
   activeStatus: "all",
 };
 
 export function ManagerProjectsPage() {
   const [filters, setFilters] =
-    useState<ProjectListFilterValues>(EMPTY_FILTERS);
+    useState<ActiveStatusFilterValues>(EMPTY_FILTERS);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export function ManagerProjectsPage() {
     setErrorMessage(null);
 
     try {
-      const data = await getProjects(projectListFiltersToApi(filters));
+      const data = await getProjects(activeStatusFilterToApi(filters.activeStatus));
       setProjects(data);
       setLoadState("success");
     } catch (error) {

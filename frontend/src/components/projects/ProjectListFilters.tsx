@@ -1,17 +1,14 @@
 import { FormField, formInputClassName } from "@/components/common/FormField";
 import { Button } from "@/components/ui/button";
-
-export type ProjectListFilterValues = {
-  activeStatus: "all" | "active" | "inactive";
-};
+import type { ActiveStatusFilterValues } from "@/utils/active-status-filter";
 
 type ProjectListFiltersProps = {
-  values: ProjectListFilterValues;
+  values: ActiveStatusFilterValues;
   disabled?: boolean;
-  onChange: (values: ProjectListFilterValues) => void;
+  onChange: (values: ActiveStatusFilterValues) => void;
 };
 
-const EMPTY_FILTERS: ProjectListFilterValues = {
+const EMPTY_FILTERS: ActiveStatusFilterValues = {
   activeStatus: "all",
 };
 
@@ -49,7 +46,7 @@ export function ProjectListFilters({
           onChange={(event) =>
             onChange({
               activeStatus: event.target
-                .value as ProjectListFilterValues["activeStatus"],
+                .value as ActiveStatusFilterValues["activeStatus"],
             })
           }
         >
@@ -60,18 +57,4 @@ export function ProjectListFilters({
       </FormField>
     </div>
   );
-}
-
-export function projectListFiltersToApi(values: ProjectListFilterValues): {
-  isActive?: boolean;
-} {
-  if (values.activeStatus === "active") {
-    return { isActive: true };
-  }
-
-  if (values.activeStatus === "inactive") {
-    return { isActive: false };
-  }
-
-  return {};
 }

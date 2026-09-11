@@ -1,11 +1,11 @@
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { TaskTypeListFilters } from "@/components/task-types/TaskTypeListFilters";
 import {
-  TaskTypeListFilters,
-  taskTypeListFiltersToApi,
-  type TaskTypeListFilterValues,
-} from "@/components/task-types/TaskTypeListFilters";
+  activeStatusFilterToApi,
+  type ActiveStatusFilterValues,
+} from "@/utils/active-status-filter";
 import { TaskTypeList } from "@/components/task-types/TaskTypeList";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getTaskTypes } from "@/services/task-types";
@@ -16,13 +16,13 @@ import { cn } from "@/lib/utils";
 
 type LoadState = "loading" | "success" | "error";
 
-const EMPTY_FILTERS: TaskTypeListFilterValues = {
+const EMPTY_FILTERS: ActiveStatusFilterValues = {
   activeStatus: "all",
 };
 
 export function ManagerTaskTypesPage() {
   const [filters, setFilters] =
-    useState<TaskTypeListFilterValues>(EMPTY_FILTERS);
+    useState<ActiveStatusFilterValues>(EMPTY_FILTERS);
   const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,7 +32,9 @@ export function ManagerTaskTypesPage() {
     setErrorMessage(null);
 
     try {
-      const data = await getTaskTypes(taskTypeListFiltersToApi(filters));
+      const data = await getTaskTypes(
+        activeStatusFilterToApi(filters.activeStatus),
+      );
       setTaskTypes(data);
       setLoadState("success");
     } catch (error) {

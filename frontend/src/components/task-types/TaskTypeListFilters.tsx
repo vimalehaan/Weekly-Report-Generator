@@ -1,17 +1,14 @@
 import { FormField, formInputClassName } from "@/components/common/FormField";
 import { Button } from "@/components/ui/button";
-
-export type TaskTypeListFilterValues = {
-  activeStatus: "all" | "active" | "inactive";
-};
+import type { ActiveStatusFilterValues } from "@/utils/active-status-filter";
 
 type TaskTypeListFiltersProps = {
-  values: TaskTypeListFilterValues;
+  values: ActiveStatusFilterValues;
   disabled?: boolean;
-  onChange: (values: TaskTypeListFilterValues) => void;
+  onChange: (values: ActiveStatusFilterValues) => void;
 };
 
-const EMPTY_FILTERS: TaskTypeListFilterValues = {
+const EMPTY_FILTERS: ActiveStatusFilterValues = {
   activeStatus: "all",
 };
 
@@ -49,7 +46,7 @@ export function TaskTypeListFilters({
           onChange={(event) =>
             onChange({
               activeStatus: event.target
-                .value as TaskTypeListFilterValues["activeStatus"],
+                .value as ActiveStatusFilterValues["activeStatus"],
             })
           }
         >
@@ -60,18 +57,4 @@ export function TaskTypeListFilters({
       </FormField>
     </div>
   );
-}
-
-export function taskTypeListFiltersToApi(values: TaskTypeListFilterValues): {
-  isActive?: boolean;
-} {
-  if (values.activeStatus === "active") {
-    return { isActive: true };
-  }
-
-  if (values.activeStatus === "inactive") {
-    return { isActive: false };
-  }
-
-  return {};
 }
