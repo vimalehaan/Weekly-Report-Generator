@@ -5,6 +5,7 @@ import type { CreateReportFormValues } from "@/schemas/report/create-report.sche
 import type { Project } from "@/types/project";
 import type { TaskType } from "@/types/task-type";
 import { TASK_PRIORITIES, TASK_STATUSES } from "@/types/report";
+import { formatCatalogOptionLabel } from "@/utils/merge-catalog-options";
 
 type CreateReportTaskRowProps = {
   index: number;
@@ -57,7 +58,7 @@ export function CreateReportTaskRow({
             <option value="">Select a project</option>
             {projects.map((project) => (
               <option key={project.id} value={project.id}>
-                {project.name}
+                {formatCatalogOptionLabel(project.name, project.isActive)}
               </option>
             ))}
           </select>
@@ -77,7 +78,7 @@ export function CreateReportTaskRow({
             <option value="">None</option>
             {taskTypes.map((taskType) => (
               <option key={taskType.id} value={taskType.id}>
-                {taskType.name}
+                {formatCatalogOptionLabel(taskType.name, taskType.isActive)}
               </option>
             ))}
           </select>
