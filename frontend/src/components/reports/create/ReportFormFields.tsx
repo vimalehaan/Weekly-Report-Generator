@@ -4,9 +4,10 @@ import type {
   UseFormRegister,
   UseFormReturn,
 } from "react-hook-form";
-import { useFieldArray } from "react-hook-form";
+import { useController, useFieldArray } from "react-hook-form";
 import { CreateReportTaskRow } from "@/components/reports/create/CreateReportTaskRow";
 import { FormField, formInputClassName } from "@/components/common/FormField";
+import { WeekWindowDatePicker } from "@/components/common/WeekWindowDatePicker";
 import { Button } from "@/components/ui/button";
 import {
   createEmptyTaskRow,
@@ -14,6 +15,10 @@ import {
 } from "@/schemas/report/create-report.schema";
 import type { Project } from "@/types/project";
 import type { TaskType } from "@/types/task-type";
+import {
+  computeWeekEndFromWeekStart,
+  isIsoDateString,
+} from "@/utils/report-dates";
 import { cn } from "@/lib/utils";
 
 type ReportFormFieldsProps = {
@@ -33,6 +38,14 @@ export function ReportFormFields({
   taskTypes,
   disabled = false,
 }: ReportFormFieldsProps) {
+  const { field: weekStartField } = useController({
+    name: "weekStartDate",
+    control,
+  });
+
+  const weekEndDate = isIsoDateString(weekStartField.value)
+    ? computeWeekEndFromWeekStart(weekStartField.value)
+    : null;
   const { fields: taskFields, append: appendTask, remove: removeTask } =
     useFieldArray({ control, name: "tasks" });
 
@@ -58,32 +71,41 @@ export function ReportFormFields({
     <fieldset disabled={disabled} className="space-y-8">
       <section className="space-y-4">
         <h2 className="text-lg font-medium">Report period</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <p className="text-sm text-muted-foreground">
+          Choose the week start date. The calendar highlights the full seven-day
+          reporting window (six days after the start).
+        </p>
+        <div className="max-w-md space-y-4">
           <FormField
             id="weekStartDate"
             label="Week start"
             error={errors.weekStartDate?.message}
           >
-            <input
+            <WeekWindowDatePicker
               id="weekStartDate"
-              type="date"
-              className={formInputClassName(Boolean(errors.weekStartDate))}
-              {...register("weekStartDate")}
+              value={weekStartField.value}
+              onChange={weekStartField.onChange}
+              onBlur={weekStartField.onBlur}
+              disabled={disabled}
+              invalid={Boolean(errors.weekStartDate)}
             />
           </FormField>
 
-          <FormField
-            id="weekEndDate"
-            label="Week end"
-            error={errors.weekEndDate?.message}
-          >
-            <input
-              id="weekEndDate"
-              type="date"
-              className={formInputClassName(Boolean(errors.weekEndDate))}
-              {...register("weekEndDate")}
-            />
-          </FormField>
+          {weekEndDate ? (
+            <div className="space-y-2">
+              <p className="text-sm font-medium leading-none text-foreground">
+                Week end
+              </p>
+              <p
+                className={cn(
+                  formInputClassName(false),
+                  "flex min-h-9 items-center bg-muted/40 tabular-nums text-foreground",
+                )}
+              >
+                {weekEndDate}
+              </p>
+            </div>
+          ) : null}
         </div>
       </section>
 

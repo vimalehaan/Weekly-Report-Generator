@@ -24,7 +24,6 @@ function parseNextWeekTasks(value: Report["nextWeekTasks"]): { description: stri
 export function mapReportToFormValues(report: Report): CreateReportFormValues {
   return {
     weekStartDate: toDateInputValue(report.weekStartDate),
-    weekEndDate: toDateInputValue(report.weekEndDate),
     tasks: report.reportTasks.map((task) => ({
       projectId: task.projectId,
       taskTypeId: task.taskTypeId ?? "",

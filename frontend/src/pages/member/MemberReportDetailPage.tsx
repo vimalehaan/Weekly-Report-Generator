@@ -78,7 +78,6 @@ export function MemberReportDetailPage() {
     resolver: zodResolver(createReportFormSchema),
     defaultValues: {
       weekStartDate: "",
-      weekEndDate: "",
       tasks: [],
       achievements: [],
       blockers: [],

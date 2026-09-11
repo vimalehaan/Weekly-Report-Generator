@@ -1,12 +1,13 @@
 import type { CreateReportFormValues } from "@/schemas/report/create-report.schema";
 import type { CreateReportInput } from "@/types/report";
+import { computeWeekEndFromWeekStart } from "@/utils/report-dates";
 
 export function mapCreateReportFormToInput(
   values: CreateReportFormValues,
 ): CreateReportInput {
   return {
     weekStartDate: values.weekStartDate,
-    weekEndDate: values.weekEndDate,
+    weekEndDate: computeWeekEndFromWeekStart(values.weekStartDate),
     tasks: values.tasks.map((task) => ({
       projectId: task.projectId,
       taskTypeId: task.taskTypeId === "" ? null : task.taskTypeId,

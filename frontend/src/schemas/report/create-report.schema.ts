@@ -49,7 +49,6 @@ export const blockerFormSchema = z.object({
 
 const reportFieldsSchema = z.object({
   weekStartDate: dateStringSchema,
-  weekEndDate: dateStringSchema,
   tasks: z.array(reportTaskFormSchema),
   nextWeekTasks: z.array(
     z.object({
@@ -64,20 +63,7 @@ const reportFieldsSchema = z.object({
   notes: z.string().trim().optional(),
 });
 
-function weekDateRefinement(data: {
-  weekStartDate: string;
-  weekEndDate: string;
-}): boolean {
-  return data.weekEndDate >= data.weekStartDate;
-}
-
-export const createReportFormSchema = reportFieldsSchema.refine(
-  weekDateRefinement,
-  {
-    message: "Week end date must not be before week start date",
-    path: ["weekEndDate"],
-  },
-);
+export const createReportFormSchema = reportFieldsSchema;
 
 export type CreateReportFormValues = z.infer<typeof createReportFormSchema>;
 
