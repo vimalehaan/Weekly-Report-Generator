@@ -7,6 +7,7 @@ import { RegisterPage } from "@/pages/auth/RegisterPage";
 import { RoleHomeRedirect } from "@/pages/common/RoleHomeRedirect";
 import { MemberDashboardPage } from "@/pages/member/MemberDashboardPage";
 import { MemberNewReportPage } from "@/pages/member/MemberNewReportPage";
+import { MemberReportDetailPage } from "@/pages/member/MemberReportDetailPage";
 import { MemberReportHistoryPage } from "@/pages/member/MemberReportHistoryPage";
 import { MemberReportsPage } from "@/pages/member/MemberReportsPage";
 import { ManagerDashboardPage } from "@/pages/manager/ManagerDashboardPage";
@@ -67,6 +68,10 @@ export const appRouter = createBrowserRouter([
               {
                 path: ROUTES.member.reportsHistory,
                 element: <MemberReportHistoryPage />,
+              },
+              {
+                path: ROUTES.member.reportDetail,
+                element: <MemberReportDetailPage />,
               },
             ],
           },

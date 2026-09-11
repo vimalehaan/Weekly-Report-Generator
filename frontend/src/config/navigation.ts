@@ -21,9 +21,23 @@ export const MEMBER_NAV_ITEMS: AppNavItemConfig[] = [
     label: "My Reports",
     to: ROUTES.member.reports,
     icon: ClipboardList,
-    isActiveMatch: (pathname) =>
-      pathname === ROUTES.member.reports ||
-      pathname === ROUTES.member.reportsNew,
+    isActiveMatch: (pathname) => {
+      if (pathname === ROUTES.member.reportsHistory) {
+        return false;
+      }
+
+      if (
+        pathname === ROUTES.member.reports ||
+        pathname === ROUTES.member.reportsNew
+      ) {
+        return true;
+      }
+
+      return (
+        pathname.startsWith(`${ROUTES.member.reports}/`) &&
+        pathname !== ROUTES.member.reportsNew
+      );
+    },
   },
   {
     label: "Report History",

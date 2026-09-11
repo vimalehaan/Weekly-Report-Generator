@@ -9,6 +9,7 @@ export const ROUTES = {
     reports: "/member/reports",
     reportsNew: "/member/reports/new",
     reportsHistory: "/member/reports/history",
+    reportDetail: "/member/reports/:reportId",
   },
   manager: {
     dashboard: "/manager/dashboard",
@@ -41,4 +42,8 @@ export function isMemberPath(pathname: string): boolean {
 
 export function isManagerPath(pathname: string): boolean {
   return pathname.startsWith("/manager");
+}
+
+export function memberReportDetailPath(reportId: string): string {
+  return `/member/reports/${reportId}`;
 }
