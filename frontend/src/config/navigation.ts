@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import {
   isManagerReportDetailPath,
+  isManagerUserDetailPath,
   isMemberReportVersionsPath,
   ROUTES,
 } from "@/routes/paths";
@@ -81,7 +82,9 @@ export const MANAGER_NAV_ITEMS: AppNavItemConfig[] = [
     label: "Users",
     to: ROUTES.manager.users,
     icon: Users,
-    end: true,
+    isActiveMatch: (pathname) =>
+      pathname === ROUTES.manager.users ||
+      isManagerUserDetailPath(pathname),
   },
   {
     label: "Projects",

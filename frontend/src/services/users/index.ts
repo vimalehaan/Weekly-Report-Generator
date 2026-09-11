@@ -1,1 +1,1 @@
-export { getUsers } from "./user.service";
+export { getUserById, getUsers, updateUser } from "./user.service";
