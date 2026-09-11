@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthLoadingScreen } from "@/components/common/AuthLoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDefaultDashboardPath, ROUTES } from "@/routes/paths";
@@ -8,8 +8,30 @@ type RoleRouteProps = {
   allowedRoles: RoleName[];
 };
 
+function pathnameMatchesGuardArea(
+  pathname: string,
+  allowedRoles: RoleName[],
+): boolean {
+  if (
+    allowedRoles.includes("TEAM_MEMBER") &&
+    pathname.startsWith("/member")
+  ) {
+    return true;
+  }
+
+  if (
+    allowedRoles.includes("MANAGER") &&
+    pathname.startsWith("/manager")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export function RoleRoute({ allowedRoles }: RoleRouteProps) {
   const { user, isInitializing, isAuthenticated } = useAuth();
+  const location = useLocation();
 
   if (isInitializing) {
     return <AuthLoadingScreen />;
@@ -20,13 +42,17 @@ export function RoleRoute({ allowedRoles }: RoleRouteProps) {
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return (
-      <Navigate
-        to={getDefaultDashboardPath(user.role)}
-        replace
-        state={{ forbidden: true }}
-      />
-    );
+    if (pathnameMatchesGuardArea(location.pathname, allowedRoles)) {
+      return (
+        <Navigate
+          to={getDefaultDashboardPath(user.role)}
+          replace
+          state={{ forbidden: true }}
+        />
+      );
+    }
+
+    return null;
   }
 
   return <Outlet />;

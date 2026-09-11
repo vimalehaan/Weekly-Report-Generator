@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthLoadingScreen } from "@/components/common/AuthLoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDefaultDashboardPath } from "@/routes/paths";
+import { getDefaultDashboardPath, ROUTES } from "@/routes/paths";
 
 export function PublicRoute() {
   const { user, isAuthenticated, isInitializing } = useAuth();
@@ -11,7 +11,11 @@ export function PublicRoute() {
     return <AuthLoadingScreen />;
   }
 
-  if (isAuthenticated && user) {
+  const isAuthPage =
+    location.pathname === ROUTES.login ||
+    location.pathname === ROUTES.register;
+
+  if (isAuthenticated && user && isAuthPage) {
     const fromPath = (location.state as { from?: string } | null)?.from;
     const redirectPath =
       fromPath ?? getDefaultDashboardPath(user.role);

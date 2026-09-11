@@ -18,6 +18,7 @@ import { truncateChartLabel } from "@/utils/chart-display";
 
 type StatusByMemberChartProps = {
   data: DashboardMemberStatusRow[];
+  isSingleWeek?: boolean;
 };
 
 type MemberChartRow = DashboardMemberStatusRow & { shortName: string };
@@ -64,7 +65,10 @@ function hasAnyReportCounts(row: DashboardMemberStatusRow): boolean {
   );
 }
 
-export function StatusByMemberChart({ data }: StatusByMemberChartProps) {
+export function StatusByMemberChart({
+  data,
+  isSingleWeek = false,
+}: StatusByMemberChartProps) {
   const chartData = data.map((row) => ({
     ...row,
     shortName: truncateChartLabel(row.userName, 18),
@@ -72,10 +76,14 @@ export function StatusByMemberChart({ data }: StatusByMemberChartProps) {
 
   const hasData = data.some(hasAnyReportCounts);
 
+  const description = isSingleWeek
+    ? "Report status counts for the selected week start date, per active team member."
+    : "All-time stacked report status counts per active team member (every weekly report).";
+
   return (
     <DashboardChartCard
       title="Report status by member"
-      description="Stacked counts of report statuses per active team member."
+      description={description}
     >
       {!hasData ? (
         <DashboardChartEmptyState message="No member report statuses for this period." />

@@ -15,11 +15,6 @@ const prisma = new PrismaClient();
 const SEED_PASSWORD = "Password123!";
 const BCRYPT_ROUNDS = 10;
 
-type NextWeekTask = {
-  task: string;
-  priority: keyof typeof TaskPriority;
-};
-
 type SeedTaskInput = {
   projectName: string;
   taskTypeName?: string;
@@ -55,7 +50,7 @@ type SeedVersionInput = {
   versionNumber: number;
   createdByEmail: string;
   notes: string;
-  nextWeekTasks: NextWeekTask[];
+  nextWeekTasks: string[];
   tasks: SeedTaskInput[];
   achievements: SeedAchievementInput[];
   blockers: SeedBlockerInput[];
@@ -75,7 +70,7 @@ type SeedReportInput = {
   weekStart: string;
   status: ReportStatus;
   notes: string;
-  nextWeekTasks: NextWeekTask[];
+  nextWeekTasks: string[];
   tasks: SeedTaskInput[];
   achievements: SeedAchievementInput[];
   blockers: SeedBlockerInput[];
@@ -108,7 +103,7 @@ function buildReportSnapshot(input: {
   weekEndDate: Date;
   status: ReportStatus;
   notes: string;
-  nextWeekTasks: NextWeekTask[];
+  nextWeekTasks: string[];
   tasks: SeedTaskInput[];
   achievements: SeedAchievementInput[];
   blockers: SeedBlockerInput[];
@@ -448,8 +443,8 @@ function buildReportDefinitions(): SeedReportInput[] {
       status: ReportStatus.DRAFT,
       notes: "Draft in progress for the current reporting week.",
       nextWeekTasks: [
-        { task: "Complete dashboard filter UI", priority: "HIGH" },
-        { task: "Write unit tests for report service", priority: "MEDIUM" },
+        "Complete dashboard filter UI",
+        "Write unit tests for report service",
       ],
       tasks: [
         {
@@ -515,8 +510,8 @@ function buildReportDefinitions(): SeedReportInput[] {
       status: ReportStatus.APPROVED,
       notes: "Approved report for the previous week with stable delivery across tasks.",
       nextWeekTasks: [
-        { task: "Start dashboard filter implementation", priority: "HIGH" },
-        { task: "Review mobile onboarding mockups", priority: "LOW" },
+        "Start dashboard filter implementation",
+        "Review mobile onboarding mockups",
       ],
       tasks: [
         {
@@ -594,8 +589,8 @@ function buildReportDefinitions(): SeedReportInput[] {
           createdByEmail: "alex.jordan@example.com",
           notes: "Submitted report for manager review.",
           nextWeekTasks: [
-            { task: "Start dashboard filter implementation", priority: "HIGH" },
-            { task: "Review mobile onboarding mockups", priority: "LOW" },
+            "Start dashboard filter implementation",
+            "Review mobile onboarding mockups",
           ],
           tasks: [
             {
@@ -664,8 +659,8 @@ function buildReportDefinitions(): SeedReportInput[] {
       status: ReportStatus.SUBMITTED,
       notes: "Submitted and awaiting manager review.",
       nextWeekTasks: [
-        { task: "Finalize API integration", priority: "HIGH" },
-        { task: "Prepare staging deployment checklist", priority: "MEDIUM" },
+        "Finalize API integration",
+        "Prepare staging deployment checklist",
       ],
       tasks: [
         {
@@ -736,8 +731,8 @@ function buildReportDefinitions(): SeedReportInput[] {
           createdByEmail: "casey.nguyen@example.com",
           notes: "Initial submission for manager review.",
           nextWeekTasks: [
-            { task: "Finalize API integration", priority: "HIGH" },
-            { task: "Prepare staging deployment checklist", priority: "MEDIUM" },
+            "Finalize API integration",
+            "Prepare staging deployment checklist",
           ],
           tasks: [
             {
@@ -797,8 +792,8 @@ function buildReportDefinitions(): SeedReportInput[] {
       status: ReportStatus.NEEDS_CORRECTION,
       notes: "Manager requested clearer blocker impact and updated hour estimates.",
       nextWeekTasks: [
-        { task: "Resolve design review feedback", priority: "HIGH" },
-        { task: "Update homepage hero section copy", priority: "MEDIUM" },
+        "Resolve design review feedback",
+        "Update homepage hero section copy",
       ],
       tasks: [
         {
@@ -883,8 +878,8 @@ function buildReportDefinitions(): SeedReportInput[] {
           createdByEmail: "riley.patel@example.com",
           notes: "Initial submission before correction request.",
           nextWeekTasks: [
-            { task: "Resolve design review feedback", priority: "HIGH" },
-            { task: "Update homepage hero section copy", priority: "MEDIUM" },
+            "Resolve design review feedback",
+            "Update homepage hero section copy",
           ],
           tasks: [
             {
@@ -953,8 +948,8 @@ function buildReportDefinitions(): SeedReportInput[] {
       status: ReportStatus.APPROVED,
       notes: "Corrected and approved after a full review cycle.",
       nextWeekTasks: [
-        { task: "Integrate push notification service", priority: "HIGH" },
-        { task: "Add offline mode spike", priority: "MEDIUM" },
+        "Integrate push notification service",
+        "Add offline mode spike",
       ],
       tasks: [
         {
@@ -1050,7 +1045,7 @@ function buildReportDefinitions(): SeedReportInput[] {
           createdByEmail: "morgan.lee@example.com",
           notes: "Initial submission missing detailed testing deliverables.",
           nextWeekTasks: [
-            { task: "Integrate push notification service", priority: "HIGH" },
+            "Integrate push notification service",
           ],
           tasks: [
             {
@@ -1107,8 +1102,8 @@ function buildReportDefinitions(): SeedReportInput[] {
           createdByEmail: "morgan.lee@example.com",
           notes: "Resubmitted with expanded testing deliverables and blocker context.",
           nextWeekTasks: [
-            { task: "Integrate push notification service", priority: "HIGH" },
-            { task: "Add offline mode spike", priority: "MEDIUM" },
+            "Integrate push notification service",
+            "Add offline mode spike",
           ],
           tasks: [
             {
@@ -1188,7 +1183,7 @@ function buildReportDefinitions(): SeedReportInput[] {
       weekStart: "2026-08-25",
       status: ReportStatus.DRAFT,
       notes: "Early draft for the following week after mobile auth delivery.",
-      nextWeekTasks: [{ task: "Prototype offline caching layer", priority: "MEDIUM" }],
+      nextWeekTasks: ["Prototype offline caching layer"],
       tasks: [
         {
           projectName: "Mobile Application",

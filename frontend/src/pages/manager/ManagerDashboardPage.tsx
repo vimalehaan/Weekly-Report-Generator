@@ -107,7 +107,10 @@ export function ManagerDashboardPage() {
 
           <div className="grid gap-6 xl:grid-cols-2">
             <TaskTrendsChart data={data.taskTrends} />
-            <StatusByMemberChart data={data.statusByMember} />
+            <StatusByMemberChart
+              data={data.statusByMember}
+              isSingleWeek={isSingleWeek}
+            />
             <WorkloadByProjectChart data={data.workloadByProject} />
             <TimeByTaskTypeChart data={data.timeByTaskType} />
           </div>

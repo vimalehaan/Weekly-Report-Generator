@@ -24,6 +24,7 @@ import { ManagerTaskTypeDetailPage } from "@/pages/manager/ManagerTaskTypeDetail
 import { ManagerTaskTypesPage } from "@/pages/manager/ManagerTaskTypesPage";
 import { ManagerUserDetailPage } from "@/pages/manager/ManagerUserDetailPage";
 import { ManagerUsersPage } from "@/pages/manager/ManagerUsersPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { PublicRoute } from "@/routes/PublicRoute";
 import { RoleRoute } from "@/routes/RoleRoute";
@@ -43,6 +44,10 @@ export const appRouter = createBrowserRouter([
           {
             path: ROUTES.register,
             element: <RegisterPage />,
+          },
+          {
+            path: "*",
+            element: <NotFoundPage />,
           },
         ],
       },
@@ -88,6 +93,10 @@ export const appRouter = createBrowserRouter([
               {
                 path: ROUTES.member.reportDetail,
                 element: <MemberReportDetailPage />,
+              },
+              {
+                path: "*",
+                element: <NotFoundPage />,
               },
             ],
           },
@@ -147,9 +156,17 @@ export const appRouter = createBrowserRouter([
                 path: ROUTES.manager.taskTypeDetail,
                 element: <ManagerTaskTypeDetailPage />,
               },
+              {
+                path: "*",
+                element: <NotFoundPage />,
+              },
             ],
           },
         ],
+      },
+      {
+        path: "*",
+        element: <NotFoundPage />,
       },
     ],
   },

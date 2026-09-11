@@ -256,8 +256,12 @@ export async function getStatusByMember(
 ) {
   assertManager(authUser);
 
-  const scope = await resolveWeekScope(filters);
-  const reportWeekWhere = buildReportWeekWhere(scope);
+  // Lifetime counts per member when no week is selected. Other dashboard KPIs
+  // use the default eight-week window; this chart aligns with each member's
+  // full report history (same reports they see on their dashboard).
+  const reportWeekWhere: Prisma.ReportWhereInput = filters?.weekStartDate
+    ? buildReportWeekWhere(await resolveWeekScope(filters))
+    : {};
 
   const teamMembers = await prisma.user.findMany({
     where: {
