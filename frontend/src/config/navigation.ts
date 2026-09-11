@@ -7,7 +7,11 @@ import {
   Tags,
   Users,
 } from "lucide-react";
-import { isMemberReportVersionsPath, ROUTES } from "@/routes/paths";
+import {
+  isManagerReportDetailPath,
+  isMemberReportVersionsPath,
+  ROUTES,
+} from "@/routes/paths";
 import type { AppNavItemConfig } from "@/components/layout/AppNavItem";
 
 export const MEMBER_NAV_ITEMS: AppNavItemConfig[] = [
@@ -63,6 +67,9 @@ export const MANAGER_NAV_ITEMS: AppNavItemConfig[] = [
     label: "Reports",
     to: ROUTES.manager.reports,
     icon: ClipboardList,
+    isActiveMatch: (pathname) =>
+      pathname === ROUTES.manager.reports ||
+      isManagerReportDetailPath(pathname),
   },
   {
     label: "Review",

@@ -14,6 +14,7 @@ import { MemberReportVersionsPage } from "@/pages/member/MemberReportVersionsPag
 import { MemberReportsPage } from "@/pages/member/MemberReportsPage";
 import { ManagerDashboardPage } from "@/pages/manager/ManagerDashboardPage";
 import { ManagerProjectsPage } from "@/pages/manager/ManagerProjectsPage";
+import { ManagerReportDetailPage } from "@/pages/manager/ManagerReportDetailPage";
 import { ManagerReportsPage } from "@/pages/manager/ManagerReportsPage";
 import { ManagerReviewPage } from "@/pages/manager/ManagerReviewPage";
 import { ManagerTaskTypesPage } from "@/pages/manager/ManagerTaskTypesPage";
@@ -100,6 +101,10 @@ export const appRouter = createBrowserRouter([
               {
                 path: ROUTES.manager.reports,
                 element: <ManagerReportsPage />,
+              },
+              {
+                path: ROUTES.manager.reportDetail,
+                element: <ManagerReportDetailPage />,
               },
               {
                 path: ROUTES.manager.review,

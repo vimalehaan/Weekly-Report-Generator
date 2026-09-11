@@ -17,6 +17,7 @@ export const ROUTES = {
   manager: {
     dashboard: "/manager/dashboard",
     reports: "/manager/reports",
+    reportDetail: "/manager/reports/:reportId",
     review: "/manager/review",
     users: "/manager/users",
     projects: "/manager/projects",
@@ -64,4 +65,12 @@ export function memberReportVersionDetailPath(
 
 export function isMemberReportVersionsPath(pathname: string): boolean {
   return /\/member\/reports\/[^/]+\/versions(\/|$)/.test(pathname);
+}
+
+export function managerReportDetailPath(reportId: string): string {
+  return `/manager/reports/${reportId}`;
+}
+
+export function isManagerReportDetailPath(pathname: string): boolean {
+  return /^\/manager\/reports\/[^/]+$/.test(pathname);
 }
