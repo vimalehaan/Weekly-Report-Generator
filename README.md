@@ -253,7 +253,7 @@ Setting `CI=1` avoids Jest Watchman issues in some environments.
 
 **Frontend (Vitest):** Tests live next to source as `*.test.ts` / `*.test.tsx`. Config: `frontend/vitest.config.mjs`. Setup: `frontend/src/test/setup.ts`. TypeScript for tests: `frontend/tsconfig.vitest.json`. Coverage is **intentionally narrow** (401 session pipeline and related guards), not full UI coverage.
 
-**Backend (Jest):** Integration tests under `backend/tests/` (auth, reports workflow, catalog access, dashboard, report-week utils).
+**Backend (Jest):** Integration tests under `backend/tests/` (auth, reports workflow, catalog access, dashboard, report-week utils). Create `backend/.env.test` from `backend/.env.test.example` (or set `TEST_DATABASE_URL` to a PostgreSQL database whose name contains `_test`). Jest runs `prisma migrate deploy` against that database in global setup.
 
 ### Suggested pre-submission order
 
