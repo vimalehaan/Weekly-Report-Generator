@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TASK_PRIORITIES, TASK_STATUSES } from "@/types/report";
+import { isMondayWeekStart } from "@/utils/report-dates";
 
 const dateStringSchema = z
   .string()
@@ -47,8 +48,13 @@ export const blockerFormSchema = z.object({
   isKeyIssue: z.boolean(),
 });
 
+const weekStartDateSchema = dateStringSchema.refine(isMondayWeekStart, {
+  message:
+    "Week start must be a Monday. Reporting weeks run Monday through Sunday.",
+});
+
 const reportFieldsSchema = z.object({
-  weekStartDate: dateStringSchema,
+  weekStartDate: weekStartDateSchema,
   tasks: z.array(reportTaskFormSchema),
   nextWeekTasks: z.array(
     z.object({

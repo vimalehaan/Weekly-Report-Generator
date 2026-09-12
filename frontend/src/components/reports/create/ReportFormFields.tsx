@@ -18,6 +18,7 @@ import type { TaskType } from "@/types/task-type";
 import {
   computeWeekEndFromWeekStart,
   isIsoDateString,
+  isMondayWeekStart,
 } from "@/utils/report-dates";
 import { cn } from "@/lib/utils";
 
@@ -43,9 +44,11 @@ export function ReportFormFields({
     control,
   });
 
-  const weekEndDate = isIsoDateString(weekStartField.value)
-    ? computeWeekEndFromWeekStart(weekStartField.value)
-    : null;
+  const weekEndDate =
+    isIsoDateString(weekStartField.value) &&
+    isMondayWeekStart(weekStartField.value)
+      ? computeWeekEndFromWeekStart(weekStartField.value)
+      : null;
   const { fields: taskFields, append: appendTask, remove: removeTask } =
     useFieldArray({ control, name: "tasks" });
 
@@ -72,8 +75,8 @@ export function ReportFormFields({
       <section className="space-y-4">
         <h2 className="text-lg font-medium">Report period</h2>
         <p className="text-sm text-muted-foreground">
-          Choose the week start date. The calendar highlights the full seven-day
-          reporting window (six days after the start).
+          Choose the Monday that starts the reporting week. The calendar
+          highlights Monday through Sunday for the selected week.
         </p>
         <div className="max-w-md space-y-4">
           <FormField

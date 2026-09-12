@@ -439,7 +439,7 @@ function buildReportDefinitions(): SeedReportInput[] {
   return [
     {
       userEmail: "alex.jordan@example.com",
-      weekStart: "2026-09-01",
+      weekStart: "2026-08-31",
       status: ReportStatus.DRAFT,
       notes: "Draft in progress for the current reporting week.",
       nextWeekTasks: [
@@ -506,7 +506,7 @@ function buildReportDefinitions(): SeedReportInput[] {
     },
     {
       userEmail: "alex.jordan@example.com",
-      weekStart: "2026-08-25",
+      weekStart: "2026-08-24",
       status: ReportStatus.APPROVED,
       notes: "Approved report for the previous week with stable delivery across tasks.",
       nextWeekTasks: [
@@ -655,7 +655,7 @@ function buildReportDefinitions(): SeedReportInput[] {
     },
     {
       userEmail: "casey.nguyen@example.com",
-      weekStart: "2026-09-01",
+      weekStart: "2026-08-31",
       status: ReportStatus.SUBMITTED,
       notes: "Submitted and awaiting manager review.",
       nextWeekTasks: [
@@ -788,7 +788,7 @@ function buildReportDefinitions(): SeedReportInput[] {
     },
     {
       userEmail: "riley.patel@example.com",
-      weekStart: "2026-09-01",
+      weekStart: "2026-08-31",
       status: ReportStatus.NEEDS_CORRECTION,
       notes: "Manager requested clearer blocker impact and updated hour estimates.",
       nextWeekTasks: [
@@ -944,7 +944,7 @@ function buildReportDefinitions(): SeedReportInput[] {
     },
     {
       userEmail: "morgan.lee@example.com",
-      weekStart: "2026-08-18",
+      weekStart: "2026-08-17",
       status: ReportStatus.APPROVED,
       notes: "Corrected and approved after a full review cycle.",
       nextWeekTasks: [
@@ -1180,7 +1180,7 @@ function buildReportDefinitions(): SeedReportInput[] {
     },
     {
       userEmail: "morgan.lee@example.com",
-      weekStart: "2026-08-25",
+      weekStart: "2026-08-24",
       status: ReportStatus.DRAFT,
       notes: "Early draft for the following week after mobile auth delivery.",
       nextWeekTasks: ["Prototype offline caching layer"],

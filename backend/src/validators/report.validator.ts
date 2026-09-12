@@ -1,5 +1,10 @@
 import { ReportStatus, TaskPriority, TaskStatus } from "@prisma/client";
 import { z } from "zod";
+import {
+  isMondayWeekStart,
+  isSundayWeekEnd,
+  isValidReportingWeekWindow,
+} from "../utils/report-week.js";
 
 const dateStringSchema = z
   .string()
@@ -50,38 +55,64 @@ const reportFieldsSchema = z.object({
   notes: z.string().trim().optional(),
 });
 
-function weekDateRefinement(data: {
-  weekStartDate: string;
-  weekEndDate: string;
-}): boolean {
-  return data.weekEndDate >= data.weekStartDate;
-}
+const reportingWeekRefinementMessage =
+  "Reporting week must start on a Monday and end on the following Sunday";
 
-const weekDateRefinementOptions = {
-  message: "weekEndDate must not be before weekStartDate",
-  path: ["weekEndDate"],
-};
-
-export const createReportSchema = reportFieldsSchema.refine(
-  weekDateRefinement,
-  weekDateRefinementOptions,
-);
-
-export const updateReportSchema = reportFieldsSchema
-  .partial()
+export const createReportSchema = reportFieldsSchema
   .refine(
-    (data) => {
-      if (data.weekStartDate !== undefined && data.weekEndDate !== undefined) {
-        return weekDateRefinement({
-          weekStartDate: data.weekStartDate,
-          weekEndDate: data.weekEndDate,
-        });
-      }
-
-      return true;
+    (data) => isMondayWeekStart(data.weekStartDate),
+    {
+      message: "weekStartDate must be a Monday",
+      path: ["weekStartDate"],
     },
-    weekDateRefinementOptions,
+  )
+  .refine(
+    (data) => isSundayWeekEnd(data.weekEndDate),
+    {
+      message: "weekEndDate must be a Sunday",
+      path: ["weekEndDate"],
+    },
+  )
+  .refine(
+    (data) =>
+      isValidReportingWeekWindow(data.weekStartDate, data.weekEndDate),
+    {
+      message: reportingWeekRefinementMessage,
+      path: ["weekEndDate"],
+    },
   );
+
+export const updateReportSchema = reportFieldsSchema.partial().superRefine(
+  (data, ctx) => {
+    if (data.weekStartDate !== undefined && !isMondayWeekStart(data.weekStartDate)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "weekStartDate must be a Monday",
+        path: ["weekStartDate"],
+      });
+    }
+
+    if (data.weekEndDate !== undefined && !isSundayWeekEnd(data.weekEndDate)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "weekEndDate must be a Sunday",
+        path: ["weekEndDate"],
+      });
+    }
+
+    if (
+      data.weekStartDate !== undefined &&
+      data.weekEndDate !== undefined &&
+      !isValidReportingWeekWindow(data.weekStartDate, data.weekEndDate)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: reportingWeekRefinementMessage,
+        path: ["weekEndDate"],
+      });
+    }
+  },
+);
 
 const queryPositiveIntegerSchema = z
   .string()

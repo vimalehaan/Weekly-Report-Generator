@@ -44,7 +44,40 @@ export function parseIsoDateParts(
   return { year, month, day };
 }
 
-/** Inclusive 7-day reporting week: end = start + 6 calendar days (UTC date parts). */
+/** UTC Monday = 1. Reporting weeks start on Monday. */
+export function getUtcDayOfWeek(isoDate: string): number | null {
+  if (!isIsoDateString(isoDate)) {
+    return null;
+  }
+
+  return new Date(`${isoDate}T00:00:00.000Z`).getUTCDay();
+}
+
+export function isMondayWeekStart(isoDate: string): boolean {
+  return getUtcDayOfWeek(isoDate) === 1;
+}
+
+/** Monday that starts the reporting week containing the given UTC calendar date. */
+export function getMondayOfReportingWeek(isoDate: string): string | null {
+  const parts = parseIsoDateParts(isoDate);
+
+  if (!parts) {
+    return null;
+  }
+
+  const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+  const dayOfWeek = date.getUTCDay();
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  date.setUTCDate(date.getUTCDate() - daysFromMonday);
+
+  return date.toISOString().slice(0, 10);
+}
+
+export function isSundayWeekEnd(isoDate: string): boolean {
+  return getUtcDayOfWeek(isoDate) === 0;
+}
+
+/** Inclusive 7-day reporting week (Mon–Sun): end = start + 6 calendar days (UTC). */
 export function computeWeekEndFromWeekStart(weekStartDate: string): string {
   const parts = parseIsoDateParts(weekStartDate);
 

@@ -8,6 +8,7 @@ import { prisma } from "../config/database.js";
 import type { JwtPayload } from "../types/auth.js";
 import type { SafeUser } from "../types/user.js";
 import { AppError } from "../utils/app-error.js";
+import { isValidReportingWeekWindow } from "../utils/report-week.js";
 import type {
   AchievementInput,
   BlockerInput,
@@ -95,11 +96,11 @@ function assertValidWeekDateRange(
   weekStartDate: string,
   weekEndDate: string,
 ): void {
-  if (weekEndDate < weekStartDate) {
+  if (!isValidReportingWeekWindow(weekStartDate, weekEndDate)) {
     throw new AppError(
       422,
       "VALIDATION_ERROR",
-      "weekEndDate must not be before weekStartDate",
+      "Reporting week must start on a Monday and end on the following Sunday",
     );
   }
 }

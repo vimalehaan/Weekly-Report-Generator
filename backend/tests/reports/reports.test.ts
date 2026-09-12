@@ -25,7 +25,8 @@ function uniqueEmail(): string {
 function uniqueWeekDates(): { weekStartDate: string; weekEndDate: string } {
   weekOffset += 1;
   const weekStart = new Date(Date.UTC(2026, 0, 5 + weekOffset * 7));
-  const weekEnd = new Date(Date.UTC(2026, 0, 9 + weekOffset * 7));
+  const weekEnd = new Date(weekStart);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
 
   return {
     weekStartDate: weekStart.toISOString().slice(0, 10),
@@ -1539,6 +1540,24 @@ describe("Version immutability", () => {
 });
 
 describe("Validation", () => {
+  it("returns 422 when week start is not a Monday", async () => {
+    const project = await createTestProject();
+    const taskType = await createTestTaskType();
+    const member = await registerTeamMember();
+
+    const response = await member.agent
+      .post("/api/v1/reports")
+      .send(
+        validReportPayload(project.id, taskType.id, {
+          weekStartDate: "2026-01-06",
+          weekEndDate: "2026-01-12",
+        }),
+      );
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it("returns 422 for an invalid report body", async () => {
     const member = await registerTeamMember();
 

@@ -5,9 +5,11 @@ import { formInputClassName } from "@/components/common/FormField";
 import {
   computeWeekEndFromWeekStart,
   formatIsoWeekWindow,
+  getMondayOfReportingWeek,
   getMonthCalendarGrid,
   isDateInReportingWeek,
   isIsoDateString,
+  isMondayWeekStart,
   parseIsoDateParts,
 } from "@/utils/report-dates";
 import { cn } from "@/lib/utils";
@@ -98,11 +100,8 @@ export function WeekWindowDatePicker({
   );
 
   const activeWeekStart =
-    hoverIso && isIsoDateString(hoverIso)
-      ? hoverIso
-      : isIsoDateString(value)
-        ? value
-        : null;
+    hoverIso ??
+    (isMondayWeekStart(value) ? value : getMondayOfReportingWeek(value));
 
   const monthLabel = monthYearFormatter.format(
     new Date(Date.UTC(year, month - 1, 1)),
@@ -218,10 +217,13 @@ export function WeekWindowDatePicker({
 
           <div className="mt-1 grid grid-cols-7 gap-1">
             {grid.map((cell) => {
+              const isSelectable = isMondayWeekStart(cell.isoDate);
+              const weekStartForCell = getMondayOfReportingWeek(cell.isoDate);
               const inWeek =
                 activeWeekStart !== null &&
                 isDateInReportingWeek(cell.isoDate, activeWeekStart);
-              const isStart = activeWeekStart === cell.isoDate;
+              const isStart =
+                activeWeekStart !== null && cell.isoDate === activeWeekStart;
               const isEnd =
                 activeWeekStart !== null &&
                 cell.isoDate === computeWeekEndFromWeekStart(activeWeekStart);
@@ -231,22 +233,36 @@ export function WeekWindowDatePicker({
                 <button
                   key={cell.isoDate}
                   type="button"
-                  onMouseEnter={() => setHoverIso(cell.isoDate)}
+                  aria-disabled={!isSelectable}
+                  tabIndex={isSelectable ? 0 : -1}
+                  onMouseEnter={() => {
+                    if (weekStartForCell) {
+                      setHoverIso(weekStartForCell);
+                    }
+                  }}
                   onMouseLeave={() => setHoverIso(null)}
-                  onClick={() => selectDate(cell.isoDate)}
+                  onClick={() => {
+                    if (isSelectable) {
+                      selectDate(cell.isoDate);
+                    }
+                  }}
                   className={cn(
                     "h-9 rounded-md text-sm tabular-nums transition-colors",
                     !cell.inCurrentMonth && "text-muted-foreground/70",
-                    inWeek && "bg-primary/15",
+                    !isSelectable && !inWeek && "cursor-not-allowed opacity-40",
+                    !isSelectable && inWeek && "cursor-default",
+                    inWeek && !isStart && !isEnd && "bg-primary/15",
                     isStart &&
                       "bg-primary font-semibold text-primary-foreground",
                     isEnd &&
                       !isStart &&
-                      "bg-primary/25 font-medium text-foreground",
-                    isSelected &&
+                      "bg-primary/30 font-medium text-foreground",
+                    isSelectable &&
+                      isSelected &&
                       !isStart &&
                       "ring-1 ring-primary ring-offset-1 ring-offset-background",
-                    !inWeek &&
+                    isSelectable &&
+                      !inWeek &&
                       "hover:bg-muted focus-visible:bg-muted focus-visible:outline-none",
                   )}
                 >
@@ -265,7 +281,7 @@ export function WeekWindowDatePicker({
                 </span>
               </>
             ) : (
-              "Select a day to preview the seven-day reporting window."
+              "Choose a Monday to start the reporting week (Mon–Sun)."
             )}
           </p>
         </div>
