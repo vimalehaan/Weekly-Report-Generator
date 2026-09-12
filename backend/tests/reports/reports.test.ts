@@ -1608,4 +1608,15 @@ describe("Validation", () => {
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("returns 422 when filtering reports by a non-Monday weekStartDate", async () => {
+    const member = await registerTeamMember();
+
+    const response = await member.agent.get(
+      "/api/v1/reports?weekStartDate=2026-09-12",
+    );
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
 });

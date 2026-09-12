@@ -1,15 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 import type { DashboardFilters } from "../services/dashboard.service.js";
 import * as dashboardService from "../services/dashboard.service.js";
+import type { DashboardQueryInput } from "../validators/dashboard.validator.js";
 
-function parseString(value: unknown): string | undefined {
-  return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function parseDashboardFilters(query: Request["query"]): DashboardFilters {
-  const weekStartDate = parseString(query.weekStartDate);
-
-  return weekStartDate ? { weekStartDate } : {};
+function parseDashboardFilters(query: DashboardQueryInput): DashboardFilters {
+  return query.weekStartDate ? { weekStartDate: query.weekStartDate } : {};
 }
 
 export async function getSummary(
@@ -20,7 +15,7 @@ export async function getSummary(
   try {
     const summary = await dashboardService.getSummary(
       req.user!,
-      parseDashboardFilters(req.query),
+      parseDashboardFilters(req.query as DashboardQueryInput),
     );
     res.status(200).json({ data: summary });
   } catch (error) {
@@ -36,7 +31,7 @@ export async function getTaskTrends(
   try {
     const trends = await dashboardService.getTaskTrends(
       req.user!,
-      parseDashboardFilters(req.query),
+      parseDashboardFilters(req.query as DashboardQueryInput),
     );
     res.status(200).json({ data: trends });
   } catch (error) {
@@ -52,7 +47,7 @@ export async function getStatusByMember(
   try {
     const data = await dashboardService.getStatusByMember(
       req.user!,
-      parseDashboardFilters(req.query),
+      parseDashboardFilters(req.query as DashboardQueryInput),
     );
     res.status(200).json({ data });
   } catch (error) {
@@ -68,7 +63,7 @@ export async function getWorkloadByProject(
   try {
     const data = await dashboardService.getWorkloadByProject(
       req.user!,
-      parseDashboardFilters(req.query),
+      parseDashboardFilters(req.query as DashboardQueryInput),
     );
     res.status(200).json({ data });
   } catch (error) {
@@ -84,7 +79,7 @@ export async function getTimeByTaskType(
   try {
     const data = await dashboardService.getTimeByTaskType(
       req.user!,
-      parseDashboardFilters(req.query),
+      parseDashboardFilters(req.query as DashboardQueryInput),
     );
     res.status(200).json({ data });
   } catch (error) {
@@ -100,7 +95,7 @@ export async function getRecentActivity(
   try {
     const data = await dashboardService.getRecentActivity(
       req.user!,
-      parseDashboardFilters(req.query),
+      parseDashboardFilters(req.query as DashboardQueryInput),
     );
     res.status(200).json({ data });
   } catch (error) {

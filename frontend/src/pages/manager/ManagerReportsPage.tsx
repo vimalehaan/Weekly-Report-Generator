@@ -11,6 +11,7 @@ import { getUsers } from "@/services/users";
 import type { User } from "@/types/auth";
 import type { PaginationMeta, ReportListItem } from "@/types/report";
 import { getApiErrorMessage } from "@/utils/api-errors";
+import { isMondayWeekStart } from "@/utils/report-dates";
 
 type LoadState = "loading" | "success" | "error";
 
@@ -54,7 +55,7 @@ export function ManagerReportsPage() {
       const result = await getReports({
         page,
         ...(filters.status ? { status: filters.status } : {}),
-        ...(filters.weekStartDate
+        ...(filters.weekStartDate && isMondayWeekStart(filters.weekStartDate)
           ? { weekStartDate: filters.weekStartDate }
           : {}),
         ...(filters.userId ? { userId: filters.userId } : {}),

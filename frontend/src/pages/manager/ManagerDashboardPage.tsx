@@ -10,23 +10,34 @@ import { Button } from "@/components/ui/button";
 import { getDashboardData } from "@/services/dashboard";
 import type { DashboardData } from "@/types/dashboard";
 import { getApiErrorMessage } from "@/utils/api-errors";
+import {
+  getCurrentReportingWeekStart,
+  isMondayWeekStart,
+} from "@/utils/report-dates";
 
 type LoadState = "loading" | "success" | "error";
 
 export function ManagerDashboardPage() {
-  const [weekStartDate, setWeekStartDate] = useState("");
+  const [weekStartDate, setWeekStartDate] = useState(
+    getCurrentReportingWeekStart,
+  );
   const [data, setData] = useState<DashboardData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const filters = useMemo(
-    () => (weekStartDate ? { weekStartDate } : {}),
-    [weekStartDate],
-  );
+  const filters = useMemo(() => {
+    if (!isMondayWeekStart(weekStartDate)) {
+      return null;
+    }
 
-  const isSingleWeek = Boolean(weekStartDate);
+    return { weekStartDate };
+  }, [weekStartDate]);
 
   const loadDashboard = useCallback(async () => {
+    if (!filters) {
+      return;
+    }
+
     setLoadState("loading");
     setErrorMessage(null);
 
@@ -52,8 +63,8 @@ export function ManagerDashboardPage() {
         </h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
           Team reporting metrics, workload distribution, and recent workflow
-          activity. Filter by week start to align with a specific reporting
-          period.
+          activity for the selected reporting week (Monday–Sunday, UTC).
+          Defaults to the current week.
         </p>
       </div>
 
@@ -61,8 +72,16 @@ export function ManagerDashboardPage() {
         weekStartDate={weekStartDate}
         disabled={loadState === "loading"}
         onWeekStartDateChange={setWeekStartDate}
-        onClear={() => setWeekStartDate("")}
+        onResetToCurrentWeek={() =>
+          setWeekStartDate(getCurrentReportingWeekStart())
+        }
       />
+
+      {!filters && loadState !== "loading" ? (
+        <p className="text-sm text-destructive" role="alert">
+          Select a valid Monday as the reporting week start (YYYY-MM-DD).
+        </p>
+      ) : null}
 
       {loadState === "loading" ? (
         <div
@@ -100,17 +119,11 @@ export function ManagerDashboardPage() {
 
       {loadState === "success" && data ? (
         <>
-          <DashboardSummaryCards
-            summary={data.summary}
-            isSingleWeek={isSingleWeek}
-          />
+          <DashboardSummaryCards summary={data.summary} />
 
           <div className="grid gap-6 xl:grid-cols-2">
             <TaskTrendsChart data={data.taskTrends} />
-            <StatusByMemberChart
-              data={data.statusByMember}
-              isSingleWeek={isSingleWeek}
-            />
+            <StatusByMemberChart data={data.statusByMember} />
             <WorkloadByProjectChart data={data.workloadByProject} />
             <TimeByTaskTypeChart data={data.timeByTaskType} />
           </div>

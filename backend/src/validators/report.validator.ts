@@ -138,7 +138,19 @@ export const reportListQuerySchema = z
     weekStartDate: dateStringSchema.optional(),
     userId: uuidSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((data, ctx) => {
+    if (
+      data.weekStartDate !== undefined &&
+      !isMondayWeekStart(data.weekStartDate)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "weekStartDate must be a Monday",
+        path: ["weekStartDate"],
+      });
+    }
+  });
 
 export type ReportTaskInput = z.infer<typeof reportTaskInputSchema>;
 export type AchievementInput = z.infer<typeof achievementInputSchema>;

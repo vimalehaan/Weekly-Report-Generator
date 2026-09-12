@@ -625,20 +625,32 @@ async function main() {
       .getByText("—", { exact: true })
       .isVisible()
       .catch(() => true));
-    await page.getByRole("button", { name: "Clear week filter" }).click();
-    await page
-      .getByText("Loading dashboard…")
-      .waitFor({ state: "hidden", timeout: 25000 })
-      .catch(() => {});
-    if (submittedMatch && weekScoped && complianceNotDash) {
+    const resetVisible = await page
+      .getByRole("button", { name: "Current reporting week" })
+      .isVisible()
+      .catch(() => false);
+    if (resetVisible) {
+      await page.getByRole("button", { name: "Current reporting week" }).click();
+      await page
+        .getByText("Loading dashboard…")
+        .waitFor({ state: "hidden", timeout: 25000 })
+        .catch(() => {});
+    }
+    const complianceDefaultWeek = !(await page
+      .getByText("Submission compliance")
+      .locator("..")
+      .getByText("—", { exact: true })
+      .isVisible()
+      .catch(() => true));
+    if (submittedMatch && weekScoped && complianceNotDash && complianceDefaultWeek) {
       pass(
         "Manager dashboard: API-aligned KPIs + week filter",
-        `totalSubmitted UI=${uiSubmitted} API=${apiSubmitted}; week filter + clear`,
+        `totalSubmitted UI=${uiSubmitted} API=${apiSubmitted}; week filter + current week default`,
       );
     } else {
       fail(
         "Manager dashboard: API-aligned KPIs + week filter",
-        `match=${submittedMatch} ui=${uiSubmitted} api=${apiSubmitted} week=${weekScoped} compliance=${complianceNotDash}`,
+        `match=${submittedMatch} ui=${uiSubmitted} api=${apiSubmitted} week=${weekScoped} compliance=${complianceNotDash} defaultWeek=${complianceDefaultWeek}`,
       );
     }
 

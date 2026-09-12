@@ -44,7 +44,7 @@ export function TaskTrendsChart({ data }: TaskTrendsChartProps) {
   return (
     <DashboardChartCard
       title="Task trends"
-      description="Total tasks logged per reporting week."
+      description="Total tasks on reports for the selected reporting week."
     >
       {data.length === 0 ? (
         <DashboardChartEmptyState message="No task trend data for this period." />

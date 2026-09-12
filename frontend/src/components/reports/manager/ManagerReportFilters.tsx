@@ -1,5 +1,10 @@
 import { FormField, formInputClassName } from "@/components/common/FormField";
+import { WeekWindowDatePicker } from "@/components/common/WeekWindowDatePicker";
 import { Button } from "@/components/ui/button";
+import {
+  formatIsoWeekWindow,
+  isMondayWeekStart,
+} from "@/utils/report-dates";
 import { REPORT_STATUSES, type ReportStatus } from "@/types/report";
 import type { User } from "@/types/auth";
 import { formatUserDisplayName } from "@/utils/user-display";
@@ -91,17 +96,30 @@ export function ManagerReportFilters({
           </select>
         </FormField>
 
-        <FormField id="manager-filter-week" label="Week start date">
-          <input
+        <FormField id="manager-filter-week" label="Reporting week">
+          <WeekWindowDatePicker
             id="manager-filter-week"
-            type="date"
-            className={formInputClassName(false)}
-            disabled={disabled}
             value={values.weekStartDate}
-            onChange={(event) =>
-              patch({ weekStartDate: event.target.value })
+            disabled={disabled}
+            invalid={
+              values.weekStartDate !== "" &&
+              !isMondayWeekStart(values.weekStartDate)
             }
+            onChange={(weekStartDate) => patch({ weekStartDate })}
           />
+          {values.weekStartDate && isMondayWeekStart(values.weekStartDate) ? (
+            <p className="mt-2 text-xs text-muted-foreground tabular-nums">
+              Week window: {formatIsoWeekWindow(values.weekStartDate)}
+            </p>
+          ) : values.weekStartDate ? (
+            <p className="mt-2 text-xs text-destructive">
+              Week filter uses Monday week starts (YYYY-MM-DD).
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Optional: pick a Monday to filter by reporting week (Mon–Sun).
+            </p>
+          )}
         </FormField>
 
         <FormField id="manager-filter-member" label="Team member">

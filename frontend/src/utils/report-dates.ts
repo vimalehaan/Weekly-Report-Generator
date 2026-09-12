@@ -57,6 +57,19 @@ export function isMondayWeekStart(isoDate: string): boolean {
   return getUtcDayOfWeek(isoDate) === 1;
 }
 
+/** Today as YYYY-MM-DD in UTC (matches backend reporting-week defaults). */
+export function getTodayIsoUtc(): string {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  return today.toISOString().slice(0, 10);
+}
+
+/** Monday starting the reporting week that contains today (UTC). */
+export function getCurrentReportingWeekStart(): string {
+  const monday = getMondayOfReportingWeek(getTodayIsoUtc());
+  return monday ?? getTodayIsoUtc();
+}
+
 /** Monday that starts the reporting week containing the given UTC calendar date. */
 export function getMondayOfReportingWeek(isoDate: string): string | null {
   const parts = parseIsoDateParts(isoDate);

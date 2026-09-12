@@ -247,17 +247,27 @@ async function main() {
       .getByText(/%/)
       .isVisible()
       .catch(() => false);
-    await page.getByRole("button", { name: "Clear week filter" }).click();
-    await page
-      .getByText("Loading dashboard…")
-      .waitFor({ state: "hidden", timeout: 20000 })
-      .catch(() => {});
-    const complianceDash = await page.getByText("—").first().isVisible();
+    const resetWeekBtn = page.getByRole("button", {
+      name: "Current reporting week",
+    });
+    if (await resetWeekBtn.isVisible().catch(() => false)) {
+      await resetWeekBtn.click();
+      await page
+        .getByText("Loading dashboard…")
+        .waitFor({ state: "hidden", timeout: 20000 })
+        .catch(() => {});
+    }
+    const complianceCurrentWeek = await page
+      .getByText("Submission compliance")
+      .locator("xpath=..")
+      .getByText(/%/)
+      .isVisible()
+      .catch(() => false);
     pass(
       "Dashboard week filter",
-      complianceFocused && complianceDash
-        ? `Week ${sampleWeek} scoped; cleared to default (— compliance)`
-        : `focused=${complianceFocused} defaultDash=${complianceDash}`,
+      complianceFocused && complianceCurrentWeek
+        ? `Week ${sampleWeek} scoped; reset to current reporting week`
+        : `focused=${complianceFocused} currentWeek=${complianceCurrentWeek}`,
     );
 
     // —— 3. Team reports list ——

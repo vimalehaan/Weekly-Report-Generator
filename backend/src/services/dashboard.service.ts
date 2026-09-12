@@ -7,24 +7,18 @@ import {
 import { prisma } from "../config/database.js";
 import type { JwtPayload } from "../types/auth.js";
 import { AppError } from "../utils/app-error.js";
+import { getCurrentReportingWeekStart } from "../utils/report-week.js";
 
-const DEFAULT_TREND_WEEKS = 8;
 const DEFAULT_ACTIVITY_LIMIT = 15;
 
 export type DashboardFilters = {
   weekStartDate?: string;
 };
 
-type WeekScope =
-  | {
-      mode: "single";
-      weekStartDate: Date;
-    }
-  | {
-      mode: "range";
-      weekStartDateFrom: Date;
-      weekStartDateTo: Date;
-    };
+type WeekScope = {
+  weekStartDate: Date;
+  weekStartDateIso: string;
+};
 
 type ActivityRecord = {
   id: string;
@@ -54,52 +48,18 @@ function assertManager(authUser: JwtPayload): void {
   }
 }
 
-async function resolveWeekScope(filters?: DashboardFilters): Promise<WeekScope> {
-  if (filters?.weekStartDate) {
-    return {
-      mode: "single",
-      weekStartDate: parseDateString(filters.weekStartDate),
-    };
-  }
-
-  const latestReport = await prisma.report.findFirst({
-    orderBy: { weekStartDate: "desc" },
-    select: { weekStartDate: true },
-  });
-
-  if (!latestReport) {
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    return {
-      mode: "single",
-      weekStartDate: today,
-    };
-  }
-
-  const weekStartDateTo = latestReport.weekStartDate;
-  const weekStartDateFrom = new Date(weekStartDateTo);
-  weekStartDateFrom.setUTCDate(
-    weekStartDateFrom.getUTCDate() - 7 * (DEFAULT_TREND_WEEKS - 1),
-  );
+function resolveWeekScope(filters?: DashboardFilters): WeekScope {
+  const weekStartDateIso =
+    filters?.weekStartDate ?? getCurrentReportingWeekStart();
 
   return {
-    mode: "range",
-    weekStartDateFrom,
-    weekStartDateTo,
+    weekStartDate: parseDateString(weekStartDateIso),
+    weekStartDateIso,
   };
 }
 
 function buildReportWeekWhere(scope: WeekScope): Prisma.ReportWhereInput {
-  if (scope.mode === "single") {
-    return { weekStartDate: scope.weekStartDate };
-  }
-
-  return {
-    weekStartDate: {
-      gte: scope.weekStartDateFrom,
-      lte: scope.weekStartDateTo,
-    },
-  };
+  return { weekStartDate: scope.weekStartDate };
 }
 
 function buildStatusHistoryDescription(
@@ -152,7 +112,7 @@ async function getActiveTeamMemberCount(): Promise<number> {
 export async function getSummary(authUser: JwtPayload, filters?: DashboardFilters) {
   assertManager(authUser);
 
-  const scope = await resolveWeekScope(filters);
+  const scope = resolveWeekScope(filters);
   const reportWeekWhere = buildReportWeekWhere(scope);
 
   const [totalSubmitted, needsCorrection, openBlockers, completedReports, expectedTeamMembers] =
@@ -176,29 +136,25 @@ export async function getSummary(authUser: JwtPayload, filters?: DashboardFilter
           report: reportWeekWhere,
         },
       }),
-      scope.mode === "single"
-        ? prisma.report.count({
-            where: {
-              weekStartDate: scope.weekStartDate,
-              status: {
-                in: [ReportStatus.SUBMITTED, ReportStatus.APPROVED],
-              },
-              user: {
-                isActive: true,
-                role: {
-                  name: RoleName.TEAM_MEMBER,
-                },
-              },
+      prisma.report.count({
+        where: {
+          weekStartDate: scope.weekStartDate,
+          status: {
+            in: [ReportStatus.SUBMITTED, ReportStatus.APPROVED],
+          },
+          user: {
+            isActive: true,
+            role: {
+              name: RoleName.TEAM_MEMBER,
             },
-          })
-        : Promise.resolve(0),
-      scope.mode === "single"
-        ? getActiveTeamMemberCount()
-        : Promise.resolve(0),
+          },
+        },
+      }),
+      getActiveTeamMemberCount(),
     ]);
 
   const compliance =
-    scope.mode === "single" && expectedTeamMembers > 0
+    expectedTeamMembers > 0
       ? Number(((completedReports / expectedTeamMembers) * 100).toFixed(2))
       : 0;
 
@@ -207,26 +163,20 @@ export async function getSummary(authUser: JwtPayload, filters?: DashboardFilter
     compliance,
     needsCorrection,
     openBlockers,
-    weekStartDate:
-      scope.mode === "single"
-        ? formatDate(scope.weekStartDate)
-        : undefined,
-    complianceCalculation:
-      scope.mode === "single"
-        ? {
-            expectedTeamMembers,
-            completedReports,
-            formula:
-              "(completed team-member reports with status SUBMITTED or APPROVED for the selected week / active TEAM_MEMBER users) × 100",
-          }
-        : undefined,
+    weekStartDate: scope.weekStartDateIso,
+    complianceCalculation: {
+      expectedTeamMembers,
+      completedReports,
+      formula:
+        "(completed team-member reports with status SUBMITTED or APPROVED for the selected week / active TEAM_MEMBER users) × 100",
+    },
   };
 }
 
 export async function getTaskTrends(authUser: JwtPayload, filters?: DashboardFilters) {
   assertManager(authUser);
 
-  const scope = await resolveWeekScope(filters);
+  const scope = resolveWeekScope(filters);
   const reportWeekWhere = buildReportWeekWhere(scope);
 
   const reports = await prisma.report.findMany({
@@ -256,12 +206,8 @@ export async function getStatusByMember(
 ) {
   assertManager(authUser);
 
-  // Lifetime counts per member when no week is selected. Other dashboard KPIs
-  // use the default eight-week window; this chart aligns with each member's
-  // full report history (same reports they see on their dashboard).
-  const reportWeekWhere: Prisma.ReportWhereInput = filters?.weekStartDate
-    ? buildReportWeekWhere(await resolveWeekScope(filters))
-    : {};
+  const scope = resolveWeekScope(filters);
+  const reportWeekWhere = buildReportWeekWhere(scope);
 
   const teamMembers = await prisma.user.findMany({
     where: {
@@ -334,7 +280,7 @@ export async function getWorkloadByProject(
 ) {
   assertManager(authUser);
 
-  const scope = await resolveWeekScope(filters);
+  const scope = resolveWeekScope(filters);
   const reportWeekWhere = buildReportWeekWhere(scope);
 
   const groupedTasks = await prisma.reportTask.groupBy({
@@ -383,7 +329,7 @@ export async function getTimeByTaskType(
 ) {
   assertManager(authUser);
 
-  const scope = await resolveWeekScope(filters);
+  const scope = resolveWeekScope(filters);
   const reportWeekWhere = buildReportWeekWhere(scope);
 
   const groupedTasks = await prisma.reportTask.groupBy({
@@ -433,7 +379,7 @@ export async function getRecentActivity(
 ) {
   assertManager(authUser);
 
-  const scope = await resolveWeekScope(filters);
+  const scope = resolveWeekScope(filters);
   const reportWeekWhere = buildReportWeekWhere(scope);
 
   const [statusHistory, reviews] = await Promise.all([

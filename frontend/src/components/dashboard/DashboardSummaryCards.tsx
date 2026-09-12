@@ -2,7 +2,6 @@ import type { DashboardSummary } from "@/types/dashboard";
 
 type DashboardSummaryCardsProps = {
   summary: DashboardSummary;
-  isSingleWeek: boolean;
 };
 
 type SummaryCardProps = {
@@ -27,28 +26,19 @@ function SummaryCard({ label, value, hint }: SummaryCardProps) {
 
 export function DashboardSummaryCards({
   summary,
-  isSingleWeek,
 }: DashboardSummaryCardsProps) {
-  const complianceValue = isSingleWeek
-    ? `${summary.compliance}%`
-    : "—";
+  const complianceValue = `${summary.compliance}%`;
 
-  const complianceHint = isSingleWeek
-    ? summary.complianceCalculation
-      ? `${summary.complianceCalculation.completedReports} of ${summary.complianceCalculation.expectedTeamMembers} active team members submitted or approved`
-      : undefined
-    : "Select a week start date to calculate compliance for that week.";
+  const complianceHint = summary.complianceCalculation
+    ? `${summary.complianceCalculation.completedReports} of ${summary.complianceCalculation.expectedTeamMembers} active team members submitted or approved`
+    : undefined;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <SummaryCard
         label="Submitted or approved reports"
         value={String(summary.totalSubmitted)}
-        hint={
-          isSingleWeek
-            ? "Reports in submitted or approved status for the selected week."
-            : "Across the default eight-week window."
-        }
+        hint="Reports in submitted or approved status for the selected week."
       />
       <SummaryCard
         label="Submission compliance"
