@@ -16,6 +16,7 @@ import { formatWeekAxisLabel } from "@/utils/chart-display";
 
 type TaskTrendsChartProps = {
   data: DashboardTaskTrendPoint[];
+  selectedWeekStartDate?: string;
 };
 
 type TrendTooltipProps = {
@@ -40,14 +41,22 @@ function TrendTooltip({ active, payload }: TrendTooltipProps) {
   );
 }
 
-export function TaskTrendsChart({ data }: TaskTrendsChartProps) {
+export function TaskTrendsChart({
+  data,
+  selectedWeekStartDate,
+}: TaskTrendsChartProps) {
+  const hasAnyTasks = data.some((point) => point.totalTasks > 0);
+
+  const description = selectedWeekStartDate
+    ? `Total team tasks per reporting week for eight weeks centered on ${selectedWeekStartDate} (four weeks before through three weeks after).`
+    : "Total team tasks per reporting week for an eight-week window around the selected reporting week.";
+
   return (
-    <DashboardChartCard
-      title="Task trends"
-      description="Total tasks on reports for the selected reporting week."
-    >
+    <DashboardChartCard title="Task trends" description={description}>
       {data.length === 0 ? (
         <DashboardChartEmptyState message="No task trend data for this period." />
+      ) : !hasAnyTasks ? (
+        <DashboardChartEmptyState message="No tasks logged in this eight-week window." />
       ) : (
         <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">

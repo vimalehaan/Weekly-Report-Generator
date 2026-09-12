@@ -67,6 +67,49 @@ export function getMondayOfReportingWeek(isoDate: string): string | null {
   return date.toISOString().slice(0, 10);
 }
 
+/** Task trends chart: 8 reporting weeks anchored on the selected Monday. */
+export const TASK_TREND_WINDOW_WEEKS = 8;
+export const TASK_TREND_WEEKS_BEFORE_SELECTED = 4;
+
+export function shiftReportingWeekStart(
+  weekStartMondayIso: string,
+  weekOffset: number,
+): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(weekStartMondayIso);
+
+  if (!match) {
+    return null;
+  }
+
+  const date = new Date(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
+  );
+  date.setUTCDate(date.getUTCDate() + weekOffset * 7);
+
+  return date.toISOString().slice(0, 10);
+}
+
+/** Eight week starts: four before the anchor Monday, the anchor, then three after. */
+export function buildTaskTrendWeekStarts(anchorMondayIso: string): string[] {
+  const weeksAfterSelected =
+    TASK_TREND_WINDOW_WEEKS - TASK_TREND_WEEKS_BEFORE_SELECTED - 1;
+  const weekStarts: string[] = [];
+
+  for (
+    let offset = -TASK_TREND_WEEKS_BEFORE_SELECTED;
+    offset <= weeksAfterSelected;
+    offset += 1
+  ) {
+    const weekStart = shiftReportingWeekStart(anchorMondayIso, offset);
+
+    if (weekStart) {
+      weekStarts.push(weekStart);
+    }
+  }
+
+  return weekStarts;
+}
+
 /** Monday starting the reporting week that contains today (UTC calendar date). */
 export function getCurrentReportingWeekStart(): string {
   const today = new Date();

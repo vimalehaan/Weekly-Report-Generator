@@ -7,7 +7,10 @@ import {
 import { prisma } from "../config/database.js";
 import type { JwtPayload } from "../types/auth.js";
 import { AppError } from "../utils/app-error.js";
-import { getCurrentReportingWeekStart } from "../utils/report-week.js";
+import {
+  buildTaskTrendWeekStarts,
+  getCurrentReportingWeekStart,
+} from "../utils/report-week.js";
 
 const DEFAULT_ACTIVITY_LIMIT = 15;
 
@@ -177,10 +180,22 @@ export async function getTaskTrends(authUser: JwtPayload, filters?: DashboardFil
   assertManager(authUser);
 
   const scope = resolveWeekScope(filters);
-  const reportWeekWhere = buildReportWeekWhere(scope);
+  const weekStarts = buildTaskTrendWeekStarts(scope.weekStartDateIso);
+
+  if (weekStarts.length === 0) {
+    return [];
+  }
+
+  const rangeStart = parseDateString(weekStarts[0]!);
+  const rangeEnd = parseDateString(weekStarts[weekStarts.length - 1]!);
 
   const reports = await prisma.report.findMany({
-    where: reportWeekWhere,
+    where: {
+      weekStartDate: {
+        gte: rangeStart,
+        lte: rangeEnd,
+      },
+    },
     select: {
       weekStartDate: true,
       _count: {
@@ -189,14 +204,24 @@ export async function getTaskTrends(authUser: JwtPayload, filters?: DashboardFil
         },
       },
     },
-    orderBy: {
-      weekStartDate: "asc",
-    },
   });
 
-  return reports.map((report) => ({
-    weekStartDate: formatDate(report.weekStartDate),
-    totalTasks: report._count.reportTasks,
+  const totalTasksByWeek = new Map<string, number>(
+    weekStarts.map((weekStartDate) => [weekStartDate, 0]),
+  );
+
+  for (const report of reports) {
+    const weekKey = formatDate(report.weekStartDate);
+    const current = totalTasksByWeek.get(weekKey);
+
+    if (current !== undefined) {
+      totalTasksByWeek.set(weekKey, current + report._count.reportTasks);
+    }
+  }
+
+  return weekStarts.map((weekStartDate) => ({
+    weekStartDate,
+    totalTasks: totalTasksByWeek.get(weekStartDate) ?? 0,
   }));
 }
 

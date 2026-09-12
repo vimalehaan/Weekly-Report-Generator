@@ -122,7 +122,10 @@ export function ManagerDashboardPage() {
           <DashboardSummaryCards summary={data.summary} />
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <TaskTrendsChart data={data.taskTrends} />
+            <TaskTrendsChart
+              data={data.taskTrends}
+              selectedWeekStartDate={weekStartDate}
+            />
             <StatusByMemberChart data={data.statusByMember} />
             <WorkloadByProjectChart data={data.workloadByProject} />
             <TimeByTaskTypeChart data={data.timeByTaskType} />
