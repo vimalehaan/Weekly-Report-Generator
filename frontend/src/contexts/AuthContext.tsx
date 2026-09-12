@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import * as authService from "@/services/auth";
+import { registerUnauthorizedSessionListener } from "@/services/api/unauthorized-session";
 import type { LoginInput, RegisterInput, User } from "@/types/auth";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
@@ -44,6 +45,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setStatus("unauthenticated");
     }
+  }, []);
+
+  useEffect(() => {
+    registerUnauthorizedSessionListener(() => {
+      setUser(null);
+      setStatus("unauthenticated");
+    });
+
+    return () => {
+      registerUnauthorizedSessionListener(null);
+    };
   }, []);
 
   useEffect(() => {

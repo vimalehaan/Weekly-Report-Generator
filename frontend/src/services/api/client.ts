@@ -1,5 +1,6 @@
 import { getApiBaseUrl } from "@/constants/env";
 import { ApiError, createApiError } from "@/services/api/api-error";
+import { dispatchUnauthorizedSession } from "@/services/api/unauthorized-session";
 
 export type ApiRequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
@@ -41,6 +42,10 @@ export async function apiRequest<T>(
   const payload = await parseJsonBody(response);
 
   if (!response.ok) {
+    if (response.status === 401) {
+      dispatchUnauthorizedSession();
+    }
+
     throw createApiError(response.status, payload, response.statusText);
   }
 

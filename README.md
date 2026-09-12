@@ -255,10 +255,10 @@ Re-running QA may **skip** steps when seed data no longer matches preconditions 
 ## Known limitations
 
 - **Member dashboard metrics** are computed from at most the first 100 reports returned by the list API; a footnote appears when the member has more reports than loaded.
-- **No global 401 handler** on the frontend: an expired session may show inline errors until the user signs in again (documented in integration QA).
+- **Session expiry UX:** protected API `401` responses clear client auth state and redirect to sign-in via route guards; individual requests may still surface a brief inline error before redirect.
 - **Frontend lint:** oxlint may report React Fast Refresh and `set-state-in-effect` warnings; builds still succeed.
 - **Frontend bundle size:** production build may warn about a large JS chunk (Recharts and app code); no code-splitting milestone was applied.
-- **Deactivated users:** login is blocked for inactive accounts; existing JWTs remain valid until expiry (no session revocation middleware).
+- **Deactivated users:** login is blocked for inactive accounts; an existing session cookie is rejected on the next protected API request (`401`, cookie cleared server-side).
 - **Development database:** QA and manual testing can mutate report states; use `db:seed` to restore predictable demo data.
 
 ## Build (production artifacts)
