@@ -9,6 +9,8 @@ type ReportReviewHistoryProps = {
   loadState: "idle" | "loading" | "success" | "error";
   errorMessage: string | null;
   onRetry: () => void;
+  title?: string;
+  description?: string;
 };
 
 export function ReportReviewHistory({
@@ -16,16 +18,14 @@ export function ReportReviewHistory({
   loadState,
   errorMessage,
   onRetry,
+  title = "Review history",
+  description = "Manager actions and comments recorded for submitted versions.",
 }: ReportReviewHistoryProps) {
   return (
     <section className="space-y-4 rounded-lg border border-border bg-card p-4">
       <div className="space-y-1">
-        <h2 className="text-base font-semibold text-foreground">
-          Review history
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Manager actions and comments recorded for submitted versions.
-        </p>
+        <h2 className="text-base font-semibold text-foreground">{title}</h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
 
       {loadState === "loading" ? (

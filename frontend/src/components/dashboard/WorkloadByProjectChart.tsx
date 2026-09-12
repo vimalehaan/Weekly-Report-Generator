@@ -12,6 +12,7 @@ import {
   DashboardChartCard,
   DashboardChartEmptyState,
 } from "@/components/dashboard/DashboardChartCard";
+import { DashboardHorizontalScrollChart } from "@/components/dashboard/DashboardHorizontalScrollChart";
 import type { DashboardProjectWorkload } from "@/types/dashboard";
 import { formatHoursValue, truncateChartLabel } from "@/utils/chart-display";
 
@@ -64,11 +65,15 @@ export function WorkloadByProjectChart({ data }: WorkloadByProjectChartProps) {
       {data.length === 0 ? (
         <DashboardChartEmptyState message="No project workload for this period." />
       ) : (
-        <div className="h-[320px] w-full">
+        <DashboardHorizontalScrollChart
+          itemCount={chartData.length}
+          minWidthPerItem={72}
+          scrollAriaLabel="Workload by project chart"
+        >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 8, right: 8, left: 0, bottom: 48 }}
+              margin={{ top: 8, right: 8, left: 4, bottom: 48 }}
             >
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis
@@ -85,12 +90,13 @@ export function WorkloadByProjectChart({ data }: WorkloadByProjectChartProps) {
               <Bar
                 dataKey="taskCount"
                 name="Tasks"
+                maxBarSize={56}
                 fill="hsl(221 83% 53%)"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </DashboardHorizontalScrollChart>
       )}
     </DashboardChartCard>
   );

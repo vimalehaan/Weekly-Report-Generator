@@ -12,6 +12,7 @@ import {
   DashboardChartCard,
   DashboardChartEmptyState,
 } from "@/components/dashboard/DashboardChartCard";
+import { DashboardHorizontalScrollChart } from "@/components/dashboard/DashboardHorizontalScrollChart";
 import type { DashboardMemberStatusRow } from "@/types/dashboard";
 import { REPORT_STATUS_CHART_COLORS } from "@/utils/dashboard-chart-colors";
 import { truncateChartLabel } from "@/utils/chart-display";
@@ -83,11 +84,15 @@ export function StatusByMemberChart({ data }: StatusByMemberChartProps) {
       {!hasData ? (
         <DashboardChartEmptyState message="No member report statuses for this period." />
       ) : (
-        <div className="h-[320px] w-full">
+        <DashboardHorizontalScrollChart
+          itemCount={chartData.length}
+          minWidthPerItem={80}
+          scrollAriaLabel="Report status by member chart"
+        >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 8, right: 8, left: 0, bottom: 48 }}
+              margin={{ top: 8, right: 8, left: 4, bottom: 48 }}
             >
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis
@@ -105,29 +110,33 @@ export function StatusByMemberChart({ data }: StatusByMemberChartProps) {
                 dataKey="DRAFT"
                 name="Draft"
                 stackId="status"
+                maxBarSize={56}
                 fill={REPORT_STATUS_CHART_COLORS.DRAFT}
               />
               <Bar
                 dataKey="SUBMITTED"
                 name="Submitted"
                 stackId="status"
+                maxBarSize={56}
                 fill={REPORT_STATUS_CHART_COLORS.SUBMITTED}
               />
               <Bar
                 dataKey="NEEDS_CORRECTION"
                 name="Needs correction"
                 stackId="status"
+                maxBarSize={56}
                 fill={REPORT_STATUS_CHART_COLORS.NEEDS_CORRECTION}
               />
               <Bar
                 dataKey="APPROVED"
                 name="Approved"
                 stackId="status"
+                maxBarSize={56}
                 fill={REPORT_STATUS_CHART_COLORS.APPROVED}
               />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </DashboardHorizontalScrollChart>
       )}
     </DashboardChartCard>
   );

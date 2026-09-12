@@ -2,7 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { CorrectionFeedbackBanner } from "@/components/reports/CorrectionFeedbackBanner";
 import { ReportDetailView } from "@/components/reports/ReportDetailView";
+import { ReportReviewHistory } from "@/components/reports/manager/ReportReviewHistory";
 import { ReportStatusBadge } from "@/components/reports/ReportStatusBadge";
 import { SubmitReportConfirm } from "@/components/reports/SubmitReportConfirm";
 import { ReportFormFields } from "@/components/reports/create/ReportFormFields";
@@ -13,11 +15,13 @@ import {
   createReportFormSchema,
   type CreateReportFormValues,
 } from "@/schemas/report/create-report.schema";
+import { getReviews } from "@/services/reviews";
 import {
   getReportById,
   submitReport,
   updateReport,
 } from "@/services/reports";
+import type { ReportReview } from "@/types/review";
 import { memberReportVersionsPath, ROUTES } from "@/routes/paths";
 import type { Report } from "@/types/report";
 import { isApiError } from "@/services/api";
@@ -55,6 +59,11 @@ export function MemberReportDetailPage() {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reviews, setReviews] = useState<ReportReview[]>([]);
+  const [reviewsLoadState, setReviewsLoadState] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
 
   const {
     catalogState,
@@ -117,9 +126,46 @@ export function MemberReportDetailPage() {
     }
   }, [reportId]);
 
+  const loadReviews = useCallback(async () => {
+    if (!reportId) {
+      return;
+    }
+
+    setReviewsLoadState("loading");
+    setReviewsError(null);
+
+    try {
+      const data = await getReviews(reportId);
+      setReviews(data);
+      setReviewsLoadState("success");
+    } catch (error) {
+      setReviewsError(getApiErrorMessage(error));
+      setReviewsLoadState("error");
+    }
+  }, [reportId]);
+
   useEffect(() => {
     void loadReport();
   }, [loadReport]);
+
+  useEffect(() => {
+    if (loadState !== "success" || !report) {
+      return;
+    }
+
+    const hasReviewHistory =
+      report.status === "SUBMITTED" ||
+      report.status === "NEEDS_CORRECTION" ||
+      report.status === "APPROVED";
+
+    if (hasReviewHistory) {
+      void loadReviews();
+    } else {
+      setReviews([]);
+      setReviewsLoadState("idle");
+      setReviewsError(null);
+    }
+  }, [loadState, report, loadReviews]);
 
   useEffect(() => {
     if (mode === "edit" && report) {
@@ -316,6 +362,19 @@ export function MemberReportDetailPage() {
         ) : null}
       </div>
 
+      {showSubmitConfirm ? (
+        <SubmitReportConfirm
+          isResubmit={report.status === "NEEDS_CORRECTION"}
+          isSubmitting={isSubmittingReport}
+          errorMessage={submitError}
+          onConfirm={() => void handleConfirmSubmit()}
+          onCancel={() => {
+            setShowSubmitConfirm(false);
+            setSubmitError(null);
+          }}
+        />
+      ) : null}
+
       {successMessage ? (
         <p
           className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-900 dark:text-emerald-100"
@@ -331,6 +390,30 @@ export function MemberReportDetailPage() {
         </p>
       ) : null}
 
+      {report.status === "NEEDS_CORRECTION" &&
+      reviewsLoadState === "loading" ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          Loading manager feedback…
+        </p>
+      ) : null}
+
+      {report.status === "NEEDS_CORRECTION" ? (
+        <CorrectionFeedbackBanner reviews={reviews} />
+      ) : null}
+
+      {mode === "view" && hasVersionHistory ? (
+        <ReportReviewHistory
+          reviews={reviews}
+          loadState={reviewsLoadState}
+          errorMessage={reviewsError}
+          onRetry={() => {
+            void loadReviews();
+          }}
+          title="Manager feedback"
+          description="Comments and review actions from your manager on submitted versions."
+        />
+      ) : null}
+
       {mode === "view" && hasVersionHistory ? (
         <p className="text-sm">
           <Link
@@ -340,19 +423,6 @@ export function MemberReportDetailPage() {
             View submitted version snapshots
           </Link>
         </p>
-      ) : null}
-
-      {showSubmitConfirm ? (
-        <SubmitReportConfirm
-          isResubmit={report.status === "NEEDS_CORRECTION"}
-          isSubmitting={isSubmittingReport}
-          errorMessage={submitError}
-          onConfirm={() => void handleConfirmSubmit()}
-          onCancel={() => {
-            setShowSubmitConfirm(false);
-            setSubmitError(null);
-          }}
-        />
       ) : null}
 
       {mode === "view" ? <ReportDetailView report={report} /> : null}

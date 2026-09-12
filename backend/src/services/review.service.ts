@@ -324,9 +324,8 @@ export async function addComment(
 }
 
 export async function getReviews(reportId: string, authUser: JwtPayload) {
-  assertManager(authUser);
-
   const report = await getReportOrThrow(reportId);
+  assertCanViewStatusHistory(report, authUser);
 
   const reviews = await prisma.reportReview.findMany({
     where: {

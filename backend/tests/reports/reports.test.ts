@@ -1416,7 +1416,7 @@ describe("RBAC", () => {
     expect(response.body.error.code).toBe("FORBIDDEN");
   });
 
-  it("returns 403 when a team member retrieves manager-only reviews", async () => {
+  it("allows the report owner to retrieve review history", async () => {
     const project = await createTestProject();
     const taskType = await createTestTaskType();
     const member = await registerTeamMember();
@@ -1431,10 +1431,41 @@ describe("RBAC", () => {
 
     await member.agent.post(`/api/v1/reports/${reportId}/submit`);
     await manager.agent
+      .post(`/api/v1/reports/${reportId}/request-correction`)
+      .send({ comment: "Please update task hours" });
+
+    const response = await member.agent.get(
+      `/api/v1/reports/${reportId}/reviews`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0].action).toBe(
+      ReviewAction.REQUEST_CORRECTION,
+    );
+    expect(response.body.data[0].comment).toBe("Please update task hours");
+  });
+
+  it("prevents another team member from retrieving reviews", async () => {
+    const project = await createTestProject();
+    const taskType = await createTestTaskType();
+    const owner = await registerTeamMember();
+    const otherMember = await registerTeamMember();
+    const manager = await createManagerUser();
+
+    const { response: createResponse } = await createReport(
+      owner.agent,
+      project.id,
+      taskType.id,
+    );
+    const reportId = createResponse.body.data.id;
+
+    await owner.agent.post(`/api/v1/reports/${reportId}/submit`);
+    await manager.agent
       .post(`/api/v1/reports/${reportId}/approve`)
       .send({ comment: "Approved" });
 
-    const response = await member.agent.get(
+    const response = await otherMember.agent.get(
       `/api/v1/reports/${reportId}/reviews`,
     );
 
