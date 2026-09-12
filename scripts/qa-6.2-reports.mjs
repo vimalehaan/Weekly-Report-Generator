@@ -4,6 +4,11 @@
  *   cd frontend && node ../scripts/qa-6.2-reports.mjs
  */
 import { chromium } from "playwright";
+import {
+  pickAvailableWeek,
+  waitForMemberReportCard,
+  waitForReportCatalogReady,
+} from "./qa-report-week.mjs";
 
 const BASE = process.env.QA_FRONTEND_URL ?? "http://localhost:5173";
 const API = process.env.QA_API_URL ?? "http://localhost:3000";
@@ -36,10 +41,6 @@ function pass(name, notes = "") {
 
 function blocked(name, notes) {
   record(name, null, notes);
-}
-
-function formatUtcDate(date) {
-  return date.toISOString().slice(0, 10);
 }
 
 function formatWeekRangeLabel(weekStartDate, weekEndDate) {
@@ -85,30 +86,6 @@ async function waitReportsListReady(page) {
     .getByText("Loading reports…")
     .waitFor({ state: "hidden", timeout: 20000 })
     .catch(() => {});
-}
-
-async function pickAvailableWeek(page) {
-  const res = await page.request.get(`${API}/api/v1/reports?limit=100`);
-  if (!res.ok()) {
-    throw new Error(`Failed to list reports: ${res.status()}`);
-  }
-  const json = await res.json();
-  const used = new Set(
-    (json.data ?? []).map((r) =>
-      formatUtcDate(new Date(r.weekStartDate)),
-    ),
-  );
-  let cursor = new Date("2026-09-08T00:00:00.000Z");
-  for (let i = 0; i < 52; i += 1) {
-    const weekStartDate = formatUtcDate(cursor);
-    if (!used.has(weekStartDate)) {
-      const end = new Date(cursor);
-      end.setUTCDate(end.getUTCDate() + 6);
-      return { weekStartDate, weekEndDate: formatUtcDate(end) };
-    }
-    cursor.setUTCDate(cursor.getUTCDate() + 7);
-  }
-  throw new Error("Could not find an unused report week for alex.jordan");
 }
 
 async function fillFirstTaskRow(page) {
@@ -225,21 +202,42 @@ async function main() {
       validationVisible ? "Empty submit blocked with validation" : "Validation messages not found",
     );
 
-    week = await pickAvailableWeek(page);
+    week = await pickAvailableWeek(page, API);
     weekRangeLabel = formatWeekRangeLabel(week.weekStartDate, week.weekEndDate);
     await page.locator("#weekStartDate").fill(week.weekStartDate);
-    await page.locator("#weekEndDate").fill(week.weekEndDate);
+    await page.locator("#weekStartDate").blur();
+    // Week end is derived from week start in the UI (read-only); no #weekEndDate input.
 
-    await page
-      .getByText("Loading projects and task types…")
-      .waitFor({ state: "hidden", timeout: 20000 })
-      .catch(() => {});
+    await waitForReportCatalogReady(page);
 
     await fillFirstTaskRow(page);
 
     await page.locator("#notes").fill(QA_NOTES);
 
-    await page.getByRole("button", { name: "Save draft" }).click();
+    const saveDraftButton = page.getByRole("button", { name: "Save draft" });
+    await saveDraftButton.waitFor({ state: "visible", timeout: 15000 });
+    await saveDraftButton.waitFor({ state: "attached" });
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      if (!(await saveDraftButton.isDisabled())) {
+        break;
+      }
+      await page.waitForTimeout(200);
+    }
+
+    const createReportResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/v1/reports") &&
+        response.request().method() === "POST",
+      { timeout: 30000 },
+    );
+    await saveDraftButton.click();
+    const createResponse = await createReportResponse;
+    if (createResponse.status() !== 201) {
+      const errBody = await createResponse.text().catch(() => "");
+      throw new Error(
+        `POST /reports failed: ${createResponse.status()} ${errBody}`,
+      );
+    }
     await waitForPath(page, /\/member\/reports\/[0-9a-f-]+$/);
     reportId = page.url().split("/").pop();
     await page.getByText("Draft saved successfully.").waitFor({ timeout: 10000 }).catch(() => {});
@@ -316,9 +314,7 @@ async function main() {
 
     // —— 6. My Reports after submission ——
     await page.goto(`${BASE}/member/reports`, { waitUntil: "networkidle" });
-    await waitReportsListReady(page);
-    const submittedCard = reportCard(page, reportId);
-    await submittedCard.waitFor({ state: "visible", timeout: 15000 });
+    const submittedCard = await waitForMemberReportCard(page, reportId);
     const cardHasSubmitted = await submittedCard.getByText("Submitted").isVisible();
     await submittedCard.getByRole("link", { name: "View" }).click();
     await waitForPath(page, new RegExp(`/member/reports/${reportId}$`));
@@ -338,7 +334,10 @@ async function main() {
       .waitFor({ state: "hidden", timeout: 20000 })
       .catch(() => {});
 
-    const historySubmitted = reportCard(page, reportId);
+    const historySubmitted = await waitForMemberReportCard(page, reportId, {
+      listHeading: "Report History",
+      loadingText: "Loading report history…",
+    });
     const versionsLink = historySubmitted.getByRole("link", { name: "Versions" });
     const hasVersions = await versionsLink.isVisible();
 

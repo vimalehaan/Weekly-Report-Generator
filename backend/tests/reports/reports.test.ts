@@ -322,6 +322,26 @@ describe("Report creation and ownership", () => {
     expect(response.body.error.code).toBe("UNAUTHORIZED");
   });
 
+  it("returns 409 when creating a second report for the same user and week", async () => {
+    const project = await createTestProject();
+    const taskType = await createTestTaskType();
+    const member = await registerTeamMember();
+    const week = uniqueWeekDates();
+
+    const first = await member.agent
+      .post("/api/v1/reports")
+      .send(validReportPayload(project.id, taskType.id, week));
+
+    expect(first.status).toBe(201);
+
+    const duplicate = await member.agent
+      .post("/api/v1/reports")
+      .send(validReportPayload(project.id, taskType.id, week));
+
+    expect(duplicate.status).toBe(409);
+    expect(duplicate.body.error.code).toBe("DUPLICATE_REPORT");
+  });
+
   it("allows a team member to retrieve their own report", async () => {
     const project = await createTestProject();
     const taskType = await createTestTaskType();

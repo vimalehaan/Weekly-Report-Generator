@@ -25,6 +25,7 @@ New accounts registered through the UI are created as **Team Member** only.
 | Backend | Node.js, Express, TypeScript, Zod validation, JWT in HTTP-only cookies |
 | Database | PostgreSQL via Prisma ORM |
 | Backend tests | Jest, Supertest |
+| Frontend tests | Vitest, jsdom, Testing Library (focused session/API tests) |
 | Browser QA | Playwright (scripts in `scripts/`) |
 
 **Request flow (frontend):**
@@ -32,6 +33,16 @@ New accounts registered through the UI are created as **Team Member** only.
 Pages and components → domain services under `frontend/src/services/` → `apiRequest()` in `frontend/src/services/api/client.ts` (credentials included) → REST API at `/api/v1/*` → Express controllers → services → Prisma → PostgreSQL.
 
 The backend enforces authentication, authorization, validation, and report workflow rules. The frontend provides UX and client-side validation only.
+
+### Authentication and session (frontend)
+
+- **Access token:** JWT stored in an HTTP-only cookie (`accessToken`). There is **no refresh token**; the backend validates the cookie on each protected request.
+- **Bootstrap:** On load, `AuthProvider` calls `GET /api/v1/auth/me` to restore the session.
+- **API calls:** All domain services use `apiRequest()` (`frontend/src/services/api/client.ts`) with `credentials: "include"`.
+- **401 handling:** When any `apiRequest()` receives HTTP **401**, it calls `dispatchUnauthorizedSession()` (`unauthorized-session.ts`). The listener registered in `AuthProvider` clears the user and sets status to unauthenticated. Route guards (`ProtectedRoute`) then redirect to `/login` with `state.from` set to the attempted path. Login success can return the user to that path.
+- **Backend inactive users:** `requireAuth` rejects inactive or missing users with **401** and clears the cookie. Login for inactive accounts returns **401** (same message shape as invalid credentials).
+
+Route guards are **UX only**; authorization is enforced on the backend.
 
 ## Project structure
 
@@ -47,7 +58,9 @@ weekly-report-generator/
 │       ├── hooks/            # Shared hooks (e.g. report catalog)
 │       ├── schemas/          # Zod form schemas
 │       ├── types/            # TypeScript types
+│       ├── test/             # Vitest setup (jest-dom matchers)
 │       └── utils/            # Helpers (dates, workflow, API errors)
+├── frontend/vitest.config.mjs  # Vitest config (separate from Vite build)
 ├── backend/
 │   ├── src/                  # Express app, routes, controllers, services, middleware
 │   ├── prisma/
@@ -203,20 +216,51 @@ After sign-in, `/` redirects to the role-appropriate dashboard.
 
 Unknown URLs show a **404** page when matched by the public or authenticated catch-all routes (see `NotFoundPage`).
 
+## API overview
+
+Base path: **`/api/v1`**. JSON bodies; success responses use `{ data: ... }` or `{ data: ..., pagination: ... }`. Errors use `{ error: { code, message } }`.
+
+| Area | Methods | Notes |
+|------|---------|--------|
+| **Auth** | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me` | Login sets cookie; `/me` requires auth |
+| **Reports** | `GET/POST /reports`, `GET/PATCH /reports/:id`, `POST /reports/:id/submit` | Create: team members only; workflow via explicit actions |
+| **Versions** | `GET /reports/:id/versions`, `GET /reports/:id/versions/:versionNumber` | Snapshots on submit/resubmit |
+| **Reviews** | `POST .../request-correction`, `POST .../approve`, `POST .../comments`, `GET .../reviews`, `GET .../status-history` | Manager actions; owners can read reviews/history |
+| **Dashboard** | `GET /dashboard/summary`, `task-trends`, `status-by-member`, `workload-by-project`, `time-by-task-type`, `recent-activity` | Manager only; optional `weekStartDate` (Monday UTC) |
+| **Users** | `GET /users`, `GET/PATCH /users/:id` | Manager |
+| **Projects** | `GET/POST /projects`, `GET/PATCH/DELETE /projects/:id` | DELETE deactivates; authenticated read |
+| **Task types** | `GET/POST /task-types`, `GET/PATCH/DELETE /task-types/:id` | Same pattern as projects |
+
+Reporting weeks use **Monday–Sunday UTC** dates. One report per user per `weekStartDate`.
+
+OpenAPI/Swagger is **not** included in this repository; use this table and backend route modules under `backend/src/routes/` for reference.
+
 ## Testing and verification
 
-There is **no frontend unit test suite** in this repository. Verification is via lint, builds, backend integration tests, and optional Playwright QA scripts.
+### Automated tests
 
 From the repository root:
 
 ```bash
+npm run test --workspace=frontend    # Vitest (session / apiRequest / route guards)
 npm run lint --workspace=frontend
 npm run build --workspace=frontend
 npm run build --workspace=backend
-CI=1 npm run test --workspace=backend
+CI=1 npm run test --workspace=backend   # Jest + Supertest
 ```
 
 Setting `CI=1` avoids Jest Watchman issues in some environments.
+
+**Frontend (Vitest):** Tests live next to source as `*.test.ts` / `*.test.tsx`. Config: `frontend/vitest.config.mjs`. Setup: `frontend/src/test/setup.ts`. TypeScript for tests: `frontend/tsconfig.vitest.json`. Coverage is **intentionally narrow** (401 session pipeline and related guards), not full UI coverage.
+
+**Backend (Jest):** Integration tests under `backend/tests/` (auth, reports workflow, catalog access, dashboard, report-week utils).
+
+### Suggested pre-submission order
+
+1. Migrate/seed dev DB if needed.
+2. `npm run test --workspace=frontend` and `CI=1 npm run test --workspace=backend`
+3. Lint and build both workspaces
+4. With dev servers running (`dev:frontend`, `dev:backend`), run Playwright scripts (below)
 
 Production preview (frontend):
 

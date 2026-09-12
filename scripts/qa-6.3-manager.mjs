@@ -4,6 +4,7 @@
  *   cd frontend && node ../scripts/qa-6.3-manager.mjs
  */
 import { chromium } from "playwright";
+import { waitForReportCatalogReady } from "./qa-report-week.mjs";
 
 const BASE = process.env.QA_FRONTEND_URL ?? "http://localhost:5173";
 const API = process.env.QA_API_URL ?? "http://localhost:3000";
@@ -452,10 +453,34 @@ async function main() {
       await page.goto(`${BASE}/member/reports/${correctionReportId}`, {
         waitUntil: "networkidle",
       });
+      await page.getByRole("button", { name: "Edit" }).waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
       await page.getByRole("button", { name: "Edit" }).click();
+      await waitForReportCatalogReady(page);
       await page.locator("#notes").fill(`QA-6.3 member fix ${stamp}`);
-      await page.getByRole("button", { name: "Save changes" }).click();
-      await page.getByText("Changes saved successfully.").waitFor();
+      const saveChangesButton = page.getByRole("button", {
+        name: "Save changes",
+      });
+      for (let attempt = 0; attempt < 30; attempt += 1) {
+        if (!(await saveChangesButton.isDisabled())) {
+          break;
+        }
+        await page.waitForTimeout(200);
+      }
+      const patchResponse = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/v1/reports/") &&
+          response.request().method() === "PATCH" &&
+          response.status() === 200,
+        { timeout: 30000 },
+      );
+      await saveChangesButton.click();
+      await patchResponse;
+      await page.getByText("Changes saved successfully.").waitFor({
+        timeout: 15000,
+      });
       await page.getByRole("button", { name: "Resubmit" }).click();
       await page.getByRole("button", { name: "Confirm resubmit" }).click();
       await page.getByText(/submitted successfully/i).waitFor();

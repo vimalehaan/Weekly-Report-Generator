@@ -4,6 +4,11 @@
  *   cd frontend && node ../scripts/qa-6.4-integration.mjs
  */
 import { chromium } from "playwright";
+import {
+  formatUtcDate,
+  pickAvailableWeek,
+  waitForReportCatalogReady,
+} from "./qa-report-week.mjs";
 
 const BASE = process.env.QA_FRONTEND_URL ?? "http://localhost:5173";
 const API = process.env.QA_API_URL ?? "http://localhost:3000";
@@ -57,10 +62,6 @@ function fail(name, notes) {
 
 function skip(name, notes) {
   results.push({ name, pass: "SKIPPED", notes });
-}
-
-function formatUtcDate(date) {
-  return date.toISOString().slice(0, 10);
 }
 
 function formatWeekRangeLabel(weekStartDate, weekEndDate) {
@@ -148,25 +149,6 @@ async function fetchReports(page, params = {}) {
 async function fetchAlexReports(page) {
   const all = await fetchReports(page);
   return all.filter((r) => r.user?.email === MEMBER.email);
-}
-
-async function pickAvailableWeek(page) {
-  const used = new Set(
-    (await fetchAlexReports(page)).map((r) =>
-      formatUtcDate(new Date(r.weekStartDate)),
-    ),
-  );
-  let cursor = new Date("2026-10-06T00:00:00.000Z");
-  for (let i = 0; i < 104; i += 1) {
-    const weekStartDate = formatUtcDate(cursor);
-    if (!used.has(weekStartDate)) {
-      const end = new Date(cursor);
-      end.setUTCDate(end.getUTCDate() + 6);
-      return { weekStartDate, weekEndDate: formatUtcDate(end) };
-    }
-    cursor.setUTCDate(cursor.getUTCDate() + 7);
-  }
-  throw new Error("No unused week for Alex");
 }
 
 function reportCard(page, reportId) {
@@ -419,19 +401,38 @@ async function main() {
     await page.goto(`${BASE}/member/reports/new`, { waitUntil: "networkidle" });
     await page.getByRole("heading", { name: "Create Weekly Report" }).waitFor();
     await page.getByRole("button", { name: "Add task" }).first().waitFor();
-    await page
-      .getByText("Loading projects and task types…")
-      .waitFor({ state: "hidden", timeout: 20000 })
-      .catch(() => {});
+    await waitForReportCatalogReady(page);
     pass("Lifecycle: catalog load on create", "Projects/task types loaded on create form");
 
-    week = await pickAvailableWeek(page);
+    week = await pickAvailableWeek(page, API);
     qaCreated.weekStartDate = week.weekStartDate;
     await page.locator("#weekStartDate").fill(week.weekStartDate);
-    await page.locator("#weekEndDate").fill(week.weekEndDate);
+    await page.locator("#weekStartDate").blur();
+    // Week end is derived from week start in the UI (read-only); no #weekEndDate input.
     await fillFirstTaskRow(page);
     await page.locator("#notes").fill(QA_NOTES);
-    await page.getByRole("button", { name: "Save draft" }).click();
+    const saveDraftButton = page.getByRole("button", { name: "Save draft" });
+    await saveDraftButton.waitFor({ state: "visible", timeout: 15000 });
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      if (!(await saveDraftButton.isDisabled())) {
+        break;
+      }
+      await page.waitForTimeout(200);
+    }
+    const createReportResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/v1/reports") &&
+        response.request().method() === "POST",
+      { timeout: 30000 },
+    );
+    await saveDraftButton.click();
+    const createResponse = await createReportResponse;
+    if (createResponse.status() !== 201) {
+      const errBody = await createResponse.text().catch(() => "");
+      throw new Error(
+        `POST /reports failed: ${createResponse.status()} ${errBody}`,
+      );
+    }
     await waitForPath(page, /\/member\/reports\/[0-9a-f-]+$/);
     reportId = page.url().split("/").pop();
     qaCreated.reportId = reportId;
@@ -445,8 +446,24 @@ async function main() {
     await page.goto(`${BASE}/member/reports/${reportId}`, { waitUntil: "networkidle" });
     await waitMemberReportDetail(page);
     await page.getByRole("button", { name: "Edit" }).click();
+    await waitForReportCatalogReady(page);
     await page.locator("#tasks\\.0\\.taskName").fill(QA_TASK_EDITED);
-    await page.getByRole("button", { name: "Save changes" }).click();
+    const saveChangesButton = page.getByRole("button", { name: "Save changes" });
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      if (!(await saveChangesButton.isDisabled())) {
+        break;
+      }
+      await page.waitForTimeout(200);
+    }
+    const patchResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/v1/reports/") &&
+        response.request().method() === "PATCH" &&
+        response.status() === 200,
+      { timeout: 30000 },
+    );
+    await saveChangesButton.click();
+    await patchResponse;
     await page.getByText("Changes saved successfully.").waitFor({ timeout: 15000 });
     await page.reload();
     await page.getByText(QA_TASK_EDITED).waitFor({ timeout: 15000 });
@@ -1088,22 +1105,34 @@ async function main() {
     await page.goto(`${BASE}/member/reports`, { waitUntil: "networkidle" });
     await page.getByRole("heading", { name: "My Reports" }).waitFor();
     await context.clearCookies();
-    await page.getByRole("button", { name: "New Report" }).click().catch(() => {});
-    await page.waitForTimeout(800);
-    const after401Url = page.url();
-    const stillOnReports = after401Url.includes("/member/reports");
-    const loginRedirect = after401Url.includes("/login");
-    const errorUi = await page
-      .getByText(/Could not load|Unauthorized|sign in/i)
-      .first()
-      .isVisible()
-      .catch(() => false);
-    pass(
-      "Session invalidation (401) behavior",
-      loginRedirect || errorUi || stillOnReports
-        ? `Documented: url=${after401Url} errorUi=${errorUi} — no global 401 handler (expected limitation)`
-        : "Unexpected empty shell",
-    );
+    await page.reload({ waitUntil: "networkidle" });
+    let loginRedirect = false;
+    try {
+      await waitForPath(page, /\/login(?:\?.*)?$/, 15000);
+      loginRedirect = page.url().includes("/login");
+    } catch {
+      loginRedirect = page.url().includes("/login");
+    }
+    const routerState = await getRouterState(page);
+    const fromPath =
+      routerState?.usr?.from ?? routerState?.from ?? null;
+    const fromPreserved = fromPath === "/member/reports";
+    if (loginRedirect && fromPreserved) {
+      pass(
+        "Session invalidation (401) behavior",
+        "Cookie cleared → protected reload → /login with state.from=/member/reports",
+      );
+    } else if (loginRedirect) {
+      fail(
+        "Session invalidation (401) behavior",
+        `On /login but state.from=${JSON.stringify(fromPath)} (expected /member/reports)`,
+      );
+    } else {
+      fail(
+        "Session invalidation (401) behavior",
+        `Expected /login after 401; url=${page.url()} state=${JSON.stringify(routerState)}`,
+      );
+    }
 
     // —— 14. Architecture spot-check (static, reported in summary) ——
     pass(
