@@ -279,6 +279,31 @@ describe("GET /api/v1/auth/me", () => {
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe("UNAUTHORIZED");
   });
+
+  it("returns 401 when the authenticated user is deactivated", async () => {
+    const payload = validRegistration();
+    const agent = request.agent(app);
+
+    await agent.post("/api/v1/auth/register").send(payload);
+    await agent.post("/api/v1/auth/login").send({
+      email: payload.email,
+      password: payload.password,
+    });
+
+    const meBefore = await agent.get("/api/v1/auth/me");
+    expect(meBefore.status).toBe(200);
+
+    await prisma.user.update({
+      where: { email: payload.email.toLowerCase() },
+      data: { isActive: false },
+    });
+
+    const meAfter = await agent.get("/api/v1/auth/me");
+
+    expect(meAfter.status).toBe(401);
+    expect(meAfter.body.error.code).toBe("UNAUTHORIZED");
+    expect(meAfter.body.error.message).toMatch(/inactive/i);
+  });
 });
 
 describe("POST /api/v1/auth/logout", () => {

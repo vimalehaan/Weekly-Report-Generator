@@ -297,6 +297,31 @@ describe("Report creation and ownership", () => {
     expect(response.body.data.userId).toBe(meResponse.body.data.user.id);
   });
 
+  it("returns 403 when a manager attempts to create a report", async () => {
+    const project = await createTestProject();
+    const taskType = await createTestTaskType();
+    const manager = await createManagerUser();
+
+    const response = await manager.agent
+      .post("/api/v1/reports")
+      .send(validReportPayload(project.id, taskType.id));
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("FORBIDDEN");
+  });
+
+  it("returns 401 when an unauthenticated user attempts to create a report", async () => {
+    const project = await createTestProject();
+    const taskType = await createTestTaskType();
+
+    const response = await request(app)
+      .post("/api/v1/reports")
+      .send(validReportPayload(project.id, taskType.id));
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("UNAUTHORIZED");
+  });
+
   it("allows a team member to retrieve their own report", async () => {
     const project = await createTestProject();
     const taskType = await createTestTaskType();

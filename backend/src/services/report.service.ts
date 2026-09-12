@@ -208,6 +208,16 @@ function mapBlockerCreateData(reportId: string, blockers: BlockerInput[]) {
   }));
 }
 
+function assertTeamMember(authUser: JwtPayload): void {
+  if (authUser.role !== RoleName.TEAM_MEMBER) {
+    throw new AppError(
+      403,
+      "FORBIDDEN",
+      "Only team members can create reports",
+    );
+  }
+}
+
 function assertCanAccessReport(report: Pick<Report, "userId">, authUser: JwtPayload): void {
   if (
     authUser.role === RoleName.TEAM_MEMBER &&
@@ -384,6 +394,8 @@ export async function createReport(
   authUser: JwtPayload,
   input: CreateReportInput,
 ) {
+  assertTeamMember(authUser);
+
   const weekStartDate = parseDateString(input.weekStartDate);
 
   const existingReport = await prisma.report.findUnique({
