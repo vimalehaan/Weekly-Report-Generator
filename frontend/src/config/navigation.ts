@@ -3,7 +3,6 @@ import {
   FolderKanban,
   History,
   LayoutDashboard,
-  ListChecks,
   Tags,
   Users,
 } from "lucide-react";
@@ -74,12 +73,13 @@ export const MANAGER_NAV_ITEMS: AppNavItemConfig[] = [
       pathname === ROUTES.manager.reports ||
       isManagerReportDetailPath(pathname),
   },
-  {
-    label: "Review",
-    to: ROUTES.manager.review,
-    icon: ListChecks,
-    end: true,
-  },
+  // Review hub hidden from nav for now (route/page kept); use Team Reports for review actions.
+  // {
+  //   label: "Review",
+  //   to: ROUTES.manager.review,
+  //   icon: ListChecks,
+  //   end: true,
+  // },
   {
     label: "Users",
     to: ROUTES.manager.users,

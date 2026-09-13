@@ -17,7 +17,7 @@ export function AuthenticatedShell({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex h-screen min-h-0 overflow-hidden bg-background text-foreground">
       <AppSidebar
         items={navItems}
         homePath={homePath}
@@ -25,14 +25,14 @@ export function AuthenticatedShell({
         onMobileClose={() => setMobileNavOpen(false)}
       />
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppHeader
           variant="app"
           homePath={homePath}
           onOpenMobileNav={() => setMobileNavOpen(true)}
         />
 
-        <main className="flex-1 overflow-auto px-4 py-6 md:px-6">
+        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-6">
           <div className="mx-auto w-full max-w-6xl">
             <ForbiddenNotice />
             <Outlet />
