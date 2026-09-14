@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordSchema } from "./password.schema.js";
 
 export const registerSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
@@ -8,7 +9,7 @@ export const registerSchema = z.object({
     .trim()
     .email("A valid email is required")
     .transform((value) => value.toLowerCase()),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: passwordSchema,
 });
 
 export const loginSchema = z.object({
