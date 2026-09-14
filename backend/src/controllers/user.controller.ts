@@ -1,0 +1,84 @@
+import type { NextFunction, Request, Response } from "express";
+import type { JwtPayload } from "../types/auth.js";
+import type { GetUsersFilters } from "../services/user.service.js";
+import * as userService from "../services/user.service.js";
+
+const unauthorizedResponse = {
+  error: {
+    code: "UNAUTHORIZED",
+    message: "Authentication required",
+  },
+} as const;
+
+function getAuthenticatedUser(
+  req: Request,
+  res: Response,
+): JwtPayload | undefined {
+  if (!req.user) {
+    res.status(401).json(unauthorizedResponse);
+    return undefined;
+  }
+
+  return req.user;
+}
+
+export async function getUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const authUser = getAuthenticatedUser(req, res);
+    if (!authUser) {
+      return;
+    }
+
+    const users = await userService.getUsers(
+      authUser,
+      req.query as GetUsersFilters,
+    );
+    res.status(200).json({ data: users });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getUserById(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const authUser = getAuthenticatedUser(req, res);
+    if (!authUser) {
+      return;
+    }
+
+    const user = await userService.getUserById(authUser, req.params.id!);
+    res.status(200).json({ data: user });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateUser(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const authUser = getAuthenticatedUser(req, res);
+    if (!authUser) {
+      return;
+    }
+
+    const user = await userService.updateUser(
+      authUser,
+      req.params.id!,
+      req.body,
+    );
+    res.status(200).json({ data: user });
+  } catch (error) {
+    next(error);
+  }
+}
