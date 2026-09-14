@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FormField, formInputClassName } from "@/components/common/FormField";
+import { PasswordInput } from "@/components/common/PasswordInput";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   loginSchema,
@@ -67,11 +68,10 @@ export function LoginPage() {
           </FormField>
 
           <FormField id="password" label="Password" error={errors.password?.message}>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
-              className={formInputClassName(Boolean(errors.password))}
+              hasError={Boolean(errors.password)}
               aria-invalid={Boolean(errors.password)}
               disabled={isSubmitting}
               {...register("password")}

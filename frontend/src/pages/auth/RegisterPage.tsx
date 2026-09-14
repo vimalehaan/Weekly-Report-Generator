@@ -4,11 +4,13 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FormField, formInputClassName } from "@/components/common/FormField";
+import { PasswordInput } from "@/components/common/PasswordInput";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   registerSchema,
   type RegisterFormValues,
 } from "@/schemas/auth/register.schema";
+import { PASSWORD_REQUIREMENTS_HINT } from "@/schemas/auth/password.schema";
 import { ROUTES } from "@/routes/paths";
 import { getAuthErrorMessage } from "@/utils/auth-errors";
 
@@ -28,14 +30,17 @@ export function RegisterPage() {
       lastName: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
   async function onSubmit(values: RegisterFormValues) {
     setFormError(null);
 
+    const { confirmPassword: _confirmPassword, ...registerInput } = values;
+
     try {
-      await registerAccount(values);
+      await registerAccount(registerInput);
       navigate(ROUTES.home, { replace: true });
     } catch (error) {
       setFormError(getAuthErrorMessage(error));
@@ -106,14 +111,35 @@ export function RegisterPage() {
             label="Password"
             error={errors.password?.message}
           >
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
-              className={formInputClassName(Boolean(errors.password))}
+              hasError={Boolean(errors.password)}
               aria-invalid={Boolean(errors.password)}
+              aria-describedby="password-requirements"
               disabled={isSubmitting}
               {...register("password")}
+            />
+            <p
+              id="password-requirements"
+              className="text-xs text-muted-foreground"
+            >
+              {PASSWORD_REQUIREMENTS_HINT}
+            </p>
+          </FormField>
+
+          <FormField
+            id="confirmPassword"
+            label="Confirm password"
+            error={errors.confirmPassword?.message}
+          >
+            <PasswordInput
+              id="confirmPassword"
+              autoComplete="new-password"
+              hasError={Boolean(errors.confirmPassword)}
+              aria-invalid={Boolean(errors.confirmPassword)}
+              disabled={isSubmitting}
+              {...register("confirmPassword")}
             />
           </FormField>
 

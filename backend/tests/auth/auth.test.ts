@@ -119,6 +119,15 @@ describe("POST /api/v1/auth/register", () => {
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("returns 422 when password does not meet complexity rules", async () => {
+    const response = await request(app)
+      .post("/api/v1/auth/register")
+      .send(validRegistration({ password: "password123" }));
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
 });
 
 describe("POST /api/v1/auth/login", () => {

@@ -14,8 +14,9 @@ export function mergeProjectsForForm(
 
   if (report) {
     for (const task of report.reportTasks) {
-      if (!byId.has(task.project.id)) {
-        byId.set(task.project.id, task.project);
+      const project = task.project;
+      if (project && !byId.has(project.id)) {
+        byId.set(project.id, project);
       }
     }
   }

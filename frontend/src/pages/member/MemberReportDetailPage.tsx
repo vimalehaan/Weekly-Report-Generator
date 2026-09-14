@@ -168,10 +168,10 @@ export function MemberReportDetailPage() {
   }, [loadState, report, loadReviews]);
 
   useEffect(() => {
-    if (mode === "edit" && report) {
+    if (mode === "edit" && report && catalogReady) {
       reset(mapReportToFormValues(report));
     }
-  }, [mode, report, reset]);
+  }, [mode, report, catalogReady, reset]);
 
   function enterEditMode() {
     if (!report || !canEditReport(report.status)) {
